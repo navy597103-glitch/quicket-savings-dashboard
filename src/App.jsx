@@ -152,15 +152,19 @@ export default function App() {
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">
         <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/60 p-6 shadow-2xl shadow-slate-950/40 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
-              <Lightbulb size={14} /> Lifecycle Savings Dashboard
+          <div className="flex items-start gap-4">
+            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-12 w-auto rounded-md object-contain shadow-md" />
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
+                <Lightbulb size={14} /> Lifecycle Savings Dashboard
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight text-white lg:text-4xl">QUICKET 生命週期節約儀表板</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+                比較一體式 LED 與 QUICKET 模組系統在用電、維護、碳排與長期總效益上的差異。預設值使用工業場域案例，適合業主、工程商與 ESG 顧問快速評估。
+              </p>
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white lg:text-4xl">QUICKET 生命週期節約儀表板</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              比較一體式 LED 與 QUICKET 模組系統在用電、維護、碳排與長期總效益上的差異。預設值使用工業場域案例，適合業主、工程商與 ESG 顧問快速評估。
-            </p>
           </div>
+
           <div className="grid grid-cols-2 gap-3 text-sm lg:w-80">
             <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-3">
               <div className="text-slate-500">Scenario</div>
@@ -358,11 +362,11 @@ export default function App() {
                       <div className="p-5">
                         <h3 className="mb-4 font-semibold text-white">試算結果摘要</h3>
                         <div className="space-y-3 text-sm">
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">現有方案年度用電</span><span>{formatNumber(result.currentAnnualKwh)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">QUICKET 年度用電</span><span>{formatNumber(result.quicketAnnualKwh)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度節電</span><span className="text-cyan-300">{formatNumber(result.annualKwhSaved)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度電費節約</span><span className="text-cyan-300">{formatNTD(result.annualElectricitySaved)}</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">{form.years} 年維護節約</span><span className="text-cyan-300">{formatNTD(result.maintenanceSaved)}</span></div>
+                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">現有方案年度用電</span><span>{formatNumber(result.currentAn...</div>
+                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">QUICKET 年度用電</span><span>{formatNumber(result.quicketAnnual...}</div>
+                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度節電</span><span className="text-cyan-300">{formatNumber(re...}</div>
+                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度電費節約</span><span className="text-cyan-300">{formatNTD(...}</div>
+                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">{form.years} 年維護節約</span><span className="text-cyan-300">{formatNTD(...}</div>
                           <div className="flex justify-between"><span className="text-slate-400">估算碳價價值</span><span>{formatNTD(result.carbonValue)}</span></div>
                         </div>
                       </div>
@@ -376,7 +380,7 @@ export default function App() {
                             在相同場域條件下，QUICKET 的價值不只來自節電，而是來自「低瓦數運作、模組化維護、減少整燈更換」所形成的長期效益。
                           </p>
                           <p>
-                            對業主而言，這代表更低的年度營運費用；對工程商而言，這代表更容易維護與升級的標準化介面；對 ESG 或財務單位而言，這代表可追蹤、可量化的節碳成果。
+                            對業主而言，這代表更低的年度營運費用；對工程商而言，這代表更容易維護與升級的標準化介面；對 ESG 或財務單位而言，這[...]
                           </p>
                           <div className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 text-cyan-100">
                             {form.years} 年估算總效益：<span className="font-semibold">{formatNTD(result.totalSaved)}</span>
