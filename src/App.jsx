@@ -17,7 +17,7 @@ const formatNumber = (value, digits = 0) =>
 function Field({ label, suffix, children }) {
   return (
     <label className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-slate-300">
+      <div className="flex items-center justify-between text-xs text-slate-400">
         <span>{label}</span>
         {suffix && <span className="text-slate-500">{suffix}</span>}
       </div>
@@ -38,7 +38,7 @@ function NumberField({ label, suffix, value, onChange, min = 0, step = 1 }) {
           const v = event.target.value
           onChange(v === '' ? '' : Number(v))
         }}
-        className="w-full rounded-md border border-slate-700 bg-slate-950/80 px-3 py-2 text-slate-100 placeholder:text-slate-600"
+        className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
       />
     </Field>
   )
@@ -46,16 +46,16 @@ function NumberField({ label, suffix, value, onChange, min = 0, step = 1 }) {
 
 function KpiCard({ icon: Icon, title, value, subtitle }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-slate-950/20">
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-md">
       <div className="p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="rounded-2xl bg-cyan-400/10 p-2 text-cyan-300">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="rounded-2xl bg-gray-100 p-2 text-slate-700">
             <Icon size={20} />
           </div>
-          <span className="text-xs uppercase tracking-[0.2em] text-slate-500">QUICKET</span>
+          <span className="text-xs uppercase tracking-[0.2em] text-slate-400">QUICKET</span>
         </div>
-        <div className="text-sm text-slate-400">{title}</div>
-        <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
+        <div className="text-lg font-medium text-slate-900">{title}</div>
+        <div className="mt-1 text-2xl font-semibold text-slate-900">{value}</div>
         <div className="mt-2 text-xs text-slate-500">{subtitle}</div>
       </div>
     </div>
@@ -82,6 +82,66 @@ export default function App() {
   })
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
+
+  // Presets for quick demo / cases
+  const presets = {
+    'Industrial Bay (default)': {
+      siteType: 'factory',
+      luminaireType: 'bay-light',
+      quantity: 620,
+      currentWatt: 200,
+      quicketWatt: 150,
+      dailyHours: 12,
+      annualDays: 250,
+      electricityPrice: 4.27,
+      carbonFactor: 0.494,
+      currentMaintenanceCost: 6500,
+      quicketMaintenanceCost: 2000,
+      currentMaintenanceCycle: 3,
+      quicketMaintenanceCycle: 3,
+      years: 15,
+      carbonPrice: 2500,
+    },
+    'Warehouse (long hours)': {
+      siteType: 'warehouse',
+      luminaireType: 'bay-light',
+      quantity: 400,
+      currentWatt: 250,
+      quicketWatt: 160,
+      dailyHours: 18,
+      annualDays: 330,
+      electricityPrice: 4.27,
+      carbonFactor: 0.494,
+      currentMaintenanceCost: 7000,
+      quicketMaintenanceCost: 2200,
+      currentMaintenanceCycle: 4,
+      quicketMaintenanceCycle: 3,
+      years: 10,
+      carbonPrice: 2500,
+    },
+    'Office (day use)': {
+      siteType: 'office',
+      luminaireType: 'downlight',
+      quantity: 200,
+      currentWatt: 40,
+      quicketWatt: 28,
+      dailyHours: 10,
+      annualDays: 240,
+      electricityPrice: 4.27,
+      carbonFactor: 0.494,
+      currentMaintenanceCost: 3000,
+      quicketMaintenanceCost: 1000,
+      currentMaintenanceCycle: 5,
+      quicketMaintenanceCycle: 4,
+      years: 8,
+      carbonPrice: 2500,
+    },
+  }
+
+  const applyPreset = (name) => {
+    const p = presets[name]
+    if (p) setForm((prev) => ({ ...prev, ...p }))
+  }
 
   const result = useMemo(() => {
     const quantity = Math.max(form.quantity || 0, 0)
@@ -149,49 +209,69 @@ export default function App() {
   const [tab, setTab] = useState('cost')
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">
-        <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/60 p-6 shadow-2xl shadow-slate-950/40 lg:flex-row lg:items-end lg:justify-between">
+        <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-start gap-4">
-            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-12 w-auto rounded-md object-contain shadow-md" />
+            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-12 w-auto object-contain" />
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-slate-700">
                 <Lightbulb size={14} /> Lifecycle Savings Dashboard
               </div>
-              <h1 className="text-3xl font-semibold tracking-tight text-white lg:text-4xl">QUICKET 生命週期節約儀表板</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">QUICKET 生命週期節約儀表板</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
                 比較一體式 LED 與 QUICKET 模組系統在用電、維護、碳排與長期總效益上的差異。預設值使用工業場域案例，適合業主、工程商與 ESG 顧問快速評估。
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm lg:w-80">
-            <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-3">
+            <div className="rounded-2xl border border-gray-200 bg-white p-3">
               <div className="text-slate-500">Scenario</div>
-              <div className="font-medium text-slate-100">Industrial Bay Light</div>
+              <div className="font-medium text-slate-900">Industrial Bay Light</div>
             </div>
-            <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-3">
+            <div className="rounded-2xl border border-gray-200 bg-white p-3">
               <div className="text-slate-500">Period</div>
-              <div className="font-medium text-slate-100">{form.years} Years</div>
+              <div className="font-medium text-slate-900">{form.years} Years</div>
             </div>
           </div>
         </header>
 
         <main className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          <aside className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl shadow-slate-950/30">
-            <div className="mb-5 flex items-center gap-2">
-              <div className="rounded-2xl bg-slate-800 p-2 text-cyan-300">
-                <Settings size={18} />
+          <aside className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-2xl bg-gray-100 p-2 text-slate-700">
+                    <Settings size={18} />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-slate-900">專案輸入條件</h2>
+                    <p className="text-xs text-slate-500">Project Parameters</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h2 className="font-semibold text-white">專案輸入條件</h2>
-                <p className="text-xs text-slate-500">Project Parameters</p>
+
+              {/* Presets / 案例預設 */}
+              <div className="mb-4">
+                <div className="text-xs text-slate-500 mb-2">案例預設</div>
+                <div className="flex flex-wrap gap-2">
+                  {Object.keys(presets).map((name) => (
+                    <button
+                      key={name}
+                      onClick={() => applyPreset(name)}
+                      className="rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-gray-50"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="grid gap-4">
               <Field label="場域類型">
-                <select value={form.siteType} onChange={(e) => set('siteType', e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-950/80 px-3 py-2 text-slate-100">
+                <select value={form.siteType} onChange={(e) => set('siteType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
                   <option value="factory">工廠</option>
                   <option value="warehouse">倉儲</option>
                   <option value="office">商辦</option>
@@ -201,7 +281,7 @@ export default function App() {
               </Field>
 
               <Field label="燈具類型">
-                <select value={form.luminaireType} onChange={(e) => set('luminaireType', e.target.value)} className="w-full rounded-md border border-slate-700 bg-slate-950/80 px-3 py-2 text-slate-100">
+                <select value={form.luminaireType} onChange={(e) => set('luminaireType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
                   <option value="downlight">崁燈</option>
                   <option value="cylinder">筒燈</option>
                   <option value="bay-light">天井燈</option>
@@ -242,7 +322,7 @@ export default function App() {
 
               <NumberField label="碳價估算" suffix="NTD / ton" value={form.carbonPrice} onChange={(value) => set('carbonPrice', value)} />
 
-              <button className="mt-2 w-full rounded-md bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400">產生專案摘要</button>
+              <button className="mt-2 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-gray-50">產生專案摘要</button>
             </div>
           </aside>
 
@@ -280,50 +360,51 @@ export default function App() {
               />
             </div>
 
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-4 shadow-xl shadow-slate-950/30">
-              <div className="grid grid-cols-3 bg-slate-950/80 rounded-xl p-1">
-                <button onClick={() => setTab('cost')} className={`rounded-lg px-3 py-2 text-sm ${tab === 'cost' ? 'bg-slate-800 text-white' : 'text-slate-300'}`}>成本比較</button>
-                <button onClick={() => setTab('carbon')} className={`rounded-lg px-3 py-2 text-sm ${tab === 'carbon' ? 'bg-slate-800 text-white' : 'text-slate-300'}`}>節能節碳</button>
-                <button onClick={() => setTab('summary')} className={`rounded-lg px-3 py-2 text-sm ${tab === 'summary' ? 'bg-slate-800 text-white' : 'text-slate-300'}`}>專案摘要</button>
+            <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="grid grid-cols-4 bg-gray-50 rounded-xl p-1">
+                <button onClick={() => setTab('cost')} className={`col-span-1 rounded-lg px-3 py-2 text-sm ${tab === 'cost' ? 'bg-white text-slate-900 border' : 'text-slate-500'}`}>成本比較</button>
+                <button onClick={() => setTab('carbon')} className={`col-span-1 rounded-lg px-3 py-2 text-sm ${tab === 'carbon' ? 'bg-white text-slate-900 border' : 'text-slate-500'}`}>節能節碳</button>
+                <button onClick={() => setTab('summary')} className={`col-span-1 rounded-lg px-3 py-2 text-sm ${tab === 'summary' ? 'bg-white text-slate-900 border' : 'text-slate-500'}`}>專案摘要</button>
+                <button onClick={() => setTab('formula')} className={`col-span-1 rounded-lg px-3 py-2 text-sm ${tab === 'formula' ? 'bg-white text-slate-900 border' : 'text-slate-500'}`}>公式說明</button>
               </div>
 
               <div className="mt-5 space-y-5">
                 {tab === 'cost' && (
                   <div className="grid gap-5 xl:grid-cols-2">
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/70">
+                    <div className="rounded-xl border border-gray-200 bg-white">
                       <div className="p-5">
-                        <h3 className="mb-1 font-semibold text-white">累積電費比較</h3>
+                        <h3 className="mb-1 font-semibold text-slate-900">累積電費比較</h3>
                         <p className="mb-4 text-xs text-slate-500">Current LED vs QUICKET</p>
                         <div className="h-72">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={result.yearlyRows}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                              <XAxis dataKey="year" stroke="#94a3b8" />
-                              <YAxis stroke="#94a3b8" tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
-                              <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 12 }} />
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
+                              <XAxis dataKey="year" stroke="#64748b" />
+                              <YAxis stroke="#64748b" tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
+                              <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #e6edf2', borderRadius: 8 }} />
                               <Legend />
-                              <Area type="monotone" dataKey="現有方案電費" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.16} />
-                              <Area type="monotone" dataKey="QUICKET電費" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.16} />
+                              <Area type="monotone" dataKey="現有方案電費" stroke="#64748b" fill="#64748b" fillOpacity={0.08} />
+                              <Area type="monotone" dataKey="QUICKET電費" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.08} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/70">
+                    <div className="rounded-xl border border-gray-200 bg-white">
                       <div className="p-5">
-                        <h3 className="mb-1 font-semibold text-white">累積維護成本比較</h3>
+                        <h3 className="mb-1 font-semibold text-slate-900">累積維護成本比較</h3>
                         <p className="mb-4 text-xs text-slate-500">Whole Luminaire Replacement vs Module Replacement</p>
                         <div className="h-72">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={result.yearlyRows}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                              <XAxis dataKey="year" stroke="#94a3b8" />
-                              <YAxis stroke="#94a3b8" tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
-                              <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 12 }} />
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
+                              <XAxis dataKey="year" stroke="#64748b" />
+                              <YAxis stroke="#64748b" tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
+                              <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #e6edf2', borderRadius: 8 }} />
                               <Legend />
-                              <Bar dataKey="現有方案維護" fill="#94a3b8" radius={[6, 6, 0, 0]} />
-                              <Bar dataKey="QUICKET維護" fill="#22d3ee" radius={[6, 6, 0, 0]} />
+                              <Bar dataKey="現有方案維護" fill="#64748b" radius={[6, 6, 0, 0]} />
+                              <Bar dataKey="QUICKET維護" fill="#06b6d4" radius={[6, 6, 0, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -334,20 +415,20 @@ export default function App() {
 
                 {tab === 'carbon' && (
                   <div>
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/70">
+                    <div className="rounded-xl border border-gray-200 bg-white">
                       <div className="p-5">
-                        <h3 className="mb-1 font-semibold text-white">累積碳排比較</h3>
+                        <h3 className="mb-1 font-semibold text-slate-900">累積碳排比較</h3>
                         <p className="mb-4 text-xs text-slate-500">Electricity-related carbon emission estimation</p>
                         <div className="h-80">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={result.yearlyRows}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                              <XAxis dataKey="year" stroke="#94a3b8" />
-                              <YAxis stroke="#94a3b8" tickFormatter={(value) => `${Math.round(value / 1000)}t`} />
-                              <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} t CO₂e`} contentStyle={{ background: '#020617', border: '1px solid #334155', borderRadius: 12 }} />
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
+                              <XAxis dataKey="year" stroke="#64748b" />
+                              <YAxis stroke="#64748b" tickFormatter={(value) => `${Math.round(value / 1000)}t`} />
+                              <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} t CO₂e`} contentStyle={{ background: '#ffffff', border: '1px solid #e6edf2', borderRadius: 8 }} />
                               <Legend />
-                              <Area type="monotone" dataKey="現有方案碳排" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.16} />
-                              <Area type="monotone" dataKey="QUICKET碳排" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.16} />
+                              <Area type="monotone" dataKey="現有方案碳排" stroke="#64748b" fill="#64748b" fillOpacity={0.08} />
+                              <Area type="monotone" dataKey="QUICKET碳排" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.08} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
@@ -358,34 +439,63 @@ export default function App() {
 
                 {tab === 'summary' && (
                   <div className="grid gap-5 xl:grid-cols-2">
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/70">
+                    <div className="rounded-xl border border-gray-200 bg-white">
                       <div className="p-5">
-                        <h3 className="mb-4 font-semibold text-white">試算結果摘要</h3>
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">現有方案年度用電</span><span>{formatNumber(result.currentAnnualKwh)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">QUICKET 年度用電</span><span>{formatNumber(result.quicketAnnualKwh)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度節電</span><span className="text-cyan-300">{formatNumber(result.annualKwhSaved)} kWh</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">年度電費節約</span><span className="text-cyan-300">{formatNTD(result.annualElectricitySaved)}</span></div>
-                          <div className="flex justify-between border-b border-slate-800 pb-2"><span className="text-slate-400">{form.years} 年維護節約</span><span className="text-cyan-300">{formatNTD(result.maintenanceSaved)}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">估算碳價價值</span><span>{formatNTD(result.carbonValue)}</span></div>
+                        <h3 className="mb-4 font-semibold text-slate-900">試算結果摘要</h3>
+                        <div className="space-y-3 text-sm text-slate-700">
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-slate-500">現有方案年度用電</span><span>{formatNumber(result.currentAnnualKwh)} kWh</span></div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-slate-500">QUICKET 年度用電</span><span>{formatNumber(result.quicketAnnualKwh)} kWh</span></div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-slate-500">年度節電</span><span className="text-cyan-700">{formatNumber(result.annualKwhSaved)} kWh</span></div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-slate-500">年度電費節約</span><span className="text-cyan-700">{formatNTD(result.annualElectricitySaved)}</span></div>
+                          <div className="flex justify-between border-b border-gray-100 pb-2"><span className="text-slate-500">{form.years} 年維護節約</span><span className="text-cyan-700">{formatNTD(result.maintenanceSaved)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-500">估算碳價價值</span><span>{formatNTD(result.carbonValue)}</span></div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-cyan-400/20 bg-cyan-950/20">
+                    <div className="rounded-xl border border-cyan-100 bg-cyan-50">
                       <div className="p-5">
-                        <h3 className="mb-4 font-semibold text-white">客戶溝通重點</h3>
-                        <div className="space-y-4 text-sm leading-6 text-slate-300">
+                        <h3 className="mb-4 font-semibold text-slate-900">客戶溝通重點</h3>
+                        <div className="space-y-4 text-sm leading-6 text-slate-700">
                           <p>
                             在相同場域條件下，QUICKET 的價值不只來自節電，而是來自「低瓦數運作、模組化維護、減少整燈更換」所形成的長期效益。
                           </p>
                           <p>
                             對業主而言，這代表更低的年度營運費用；對工程商而言，這代表更容易維護與升級的標準化介面；對 ESG 或財務單位而言，這代表可追蹤、可量化的節碳成果。
                           </p>
-                          <div className="rounded-2xl border border-cyan-400/20 bg-slate-950/60 p-4 text-cyan-100">
+                          <div className="rounded-2xl border border-cyan-100 bg-white p-4 text-cyan-700">
                             {form.years} 年估算總效益：<span className="font-semibold">{formatNTD(result.totalSaved)}</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {tab === 'formula' && (
+                  <div className="rounded-xl border border-gray-200 bg-white p-5">
+                    <h3 className="mb-3 font-semibold text-slate-900">公式說明 (Formulas)</h3>
+                    <div className="text-sm text-slate-700 space-y-2">
+                      <div>
+                        <strong>年度用電 (kWh)</strong>: 現有方案 = 燈具數量 × 瓦數/1000 × 每日使用 × 每年使用天數
+                      </div>
+                      <div>
+                        <strong>年度節電 (kWh)</strong>: 現有方案年度用電 - QUICKET 年度用電
+                      </div>
+                      <div>
+                        <strong>年度電費節約 (NTD)</strong>: 年度用電差 × 電價
+                      </div>
+                      <div>
+                        <strong>年度碳排 (kg)</strong>: 年度用電 × 碳排係數
+                      </div>
+                      <div>
+                        <strong>維護成本</strong>: 維護次數 = floor(年數 / 維護週期); 維護總成本 = 燈具數量 × 每次維護成本 × 維護次數
+                      </div>
+                      <div>
+                        <strong>估算碳價價值 (NTD)</strong>: (總節碳量(kg) / 1000) × 碳價(NTD/ton)
+                      </div>
+                      <div>
+                        <strong>總效益 (NTD)</strong>: 電費節約累計 + 維護節約 + 估算碳價價值
                       </div>
                     </div>
                   </div>
