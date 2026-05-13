@@ -16,7 +16,7 @@ const formatNumber = (value, digits = 0) =>
 
 function Field({ label, suffix, children }) {
   return (
-    <label className="space-y-1.5">
+    <label className="space-y-1.5 block">
       <div className="flex items-center justify-between text-xs text-slate-400">
         <span>{label}</span>
         {suffix && <span className="text-slate-500">{suffix}</span>}
@@ -83,7 +83,6 @@ export default function App() {
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
-  // Presets for quick demo / cases
   const presets = {
     'Industrial Bay (default)': {
       siteType: 'factory',
@@ -179,7 +178,7 @@ export default function App() {
 
       return {
         year: `Y${year}`,
-        年度: year,
+        年度:年,
         現有方案電費: Math.round(currentAnnualElectricityCost * year),
         QUICKET電費: Math.round(quicketAnnualElectricityCost * year),
         現有方案維護: Math.round(currentMaintenance),
@@ -208,6 +207,16 @@ export default function App() {
 
   const [tab, setTab] = useState('cost')
 
+  // accordion state for mobile inputs
+  const [openSections, setOpenSections] = useState({
+    basics: true,
+    comparison: false,
+    usage: false,
+    esg: false,
+  })
+
+  const toggleSection = (key) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">
@@ -220,7 +229,7 @@ export default function App() {
               </div>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">QUICKET 生命週期節約儀表板</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                比較一體式 LED 與 QUICKET 模組系統在用電、維護、碳排與長期總效益上的差異。預設值使用工業場域案例，適合業主、工程商與 ESG 顧問快速評估。
+                比較一體式 LED 與 QUICKET 模組系統在用電、維護、碳排與長期總效益上的差異。
               </p>
             </div>
           </div>
@@ -237,127 +246,178 @@ export default function App() {
           </div>
         </header>
 
+        {/* Mobile KPI (visible only on mobile) */}
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:hidden">
+          <KpiCard icon={Zap} title="年度節電量" value={`${formatNumber(result.annualKwhSaved)} kWh`} subtitle="Annual Energy Saving" />
+          <KpiCard icon={Calculator} title="年度電費節約" value={formatNTD(result.annualElectricitySaved)} subtitle="Annual Electricity Cost Saving" />
+          <KpiCard icon={Leaf} title="年度節碳量" value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} t`} subtitle="Annual Carbon Reduction" />
+          <KpiCard icon={Factory} title={`${form.years} 年維護節約`} value={formatNTD(result.maintenanceSaved)} subtitle="Maintenance Cost Saving" />
+        </div>
+
         <main className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          <aside className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-5">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-2xl bg-gray-100 p-2 text-slate-700">
-                    <Settings size={18} />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-slate-900">專案輸入條件</h2>
-                    <p className="text-xs text-slate-500">Project Parameters</p>
-                  </div>
+          {/* Left: Inputs - on mobile this will appear after KPI because DOM order is below mobile KPI block */}
+          <aside className="order-2 lg:order-1 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-gray-100 p-2 text-slate-700">
+                  <Settings size={18} />
                 </div>
-              </div>
-
-              {/* Presets / 案例預設 */}
-              <div className="mb-4">
-                <div className="text-xs text-slate-500 mb-2">案例預設</div>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(presets).map((name) => (
-                    <button
-                      key={name}
-                      onClick={() => applyPreset(name)}
-                      className="rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-gray-50"
-                    >
-                      {name}
-                    </button>
-                  ))}
+                <div>
+                  <h2 className="font-semibold text-slate-900">專案輸入參數</h2>
+                  <p className="text-xs text-slate-500">在此設定專案的基礎條件與假設</p>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <Field label="場域類型">
-                <select value={form.siteType} onChange={(e) => set('siteType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
-                  <option value="factory">工廠</option>
-                  <option value="warehouse">倉儲</option>
-                  <option value="office">商辦</option>
-                  <option value="public">公共空間</option>
-                  <option value="outdoor">戶外場域</option>
-                </select>
-              </Field>
+            {/* Section 1: 專案基本資料 */}
+            <div className="mb-4 rounded-xl border border-gray-100 bg-white">
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 lg:py-4"
+                onClick={() => toggleSection('basics')}
+                aria-expanded={openSections.basics}
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">專案基本資料</div>
+                  <div className="text-xs text-slate-500">定義案場規模與試算期間</div>
+                </div>
+                <div className="text-slate-400 lg:hidden">{openSections.basics ? '收合' : '展開'}</div>
+              </button>
 
-              <Field label="燈具類型">
-                <select value={form.luminaireType} onChange={(e) => set('luminaireType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
-                  <option value="downlight">崁燈</option>
-                  <option value="cylinder">筒燈</option>
-                  <option value="bay-light">天井燈</option>
-                  <option value="flood-light">投射燈</option>
-                  <option value="street-light">路燈</option>
-                </select>
-              </Field>
+              <div className={`${openSections.basics ? 'block' : 'hidden'} px-4 pb-4 lg:block`}> 
+                <div className="space-y-3 pt-2">
+                  <div className="text-xs text-slate-500">案例預設</div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(presets).map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => applyPreset(name)}
+                        className="rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-gray-50"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="燈具數量" suffix="pcs" value={form.quantity} onChange={(value) => set('quantity', value)} />
-                <NumberField label="試算年限" suffix="years" value={form.years} onChange={(value) => set('years', value)} />
+                  <div className="grid gap-3">
+                    <Field label="場域類型">
+                      <select value={form.siteType} onChange={(e) => set('siteType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
+                        <option value="factory">工廠</option>
+                        <option value="warehouse">倉儲</option>
+                        <option value="office">商辦</option>
+                        <option value="public">公共空間</option>
+                        <option value="outdoor">戶外場域</option>
+                      </select>
+                    </Field>
+
+                    <Field label="燈具類型">
+                      <select value={form.luminaireType} onChange={(e) => set('luminaireType', e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-slate-900">
+                        <option value="downlight">崁燈</option>
+                        <option value="cylinder">筒燈</option>
+                        <option value="bay-light">天井燈</option>
+                        <option value="flood-light">投射燈</option>
+                        <option value="street-light">路燈</option>
+                      </select>
+                    </Field>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <NumberField label="燈具數量" suffix="pcs" value={form.quantity} onChange={(value) => set('quantity', value)} />
+                      <NumberField label="試算年限" suffix="years" value={form.years} onChange={(value) => set('years', value)} />
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="現有瓦數" suffix="W" value={form.currentWatt} onChange={(value) => set('currentWatt', value)} />
-                <NumberField label="QUICKET 瓦數" suffix="W" value={form.quicketWatt} onChange={(value) => set('quicketWatt', value)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="每日使用" suffix="hours" value={form.dailyHours} onChange={(value) => set('dailyHours', value)} />
-                <NumberField label="每年使用" suffix="days" value={form.annualDays} onChange={(value) => set('annualDays', value)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="電價" suffix="NTD/kWh" value={form.electricityPrice} step={0.01} onChange={(value) => set('electricityPrice', value)} />
-                <NumberField label="碳排係數" suffix="kg/kWh" value={form.carbonFactor} step={0.001} onChange={(value) => set('carbonFactor', value)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="現有維護成本" suffix="NTD/次" value={form.currentMaintenanceCost} onChange={(value) => set('currentMaintenanceCost', value)} />
-                <NumberField label="QUICKET 模組成本" suffix="NTD/次" value={form.quicketMaintenanceCost} onChange={(value) => set('quicketMaintenanceCost', value)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField label="現有維護週期" suffix="years" value={form.currentMaintenanceCycle} onChange={(value) => set('currentMaintenanceCycle', value)} />
-                <NumberField label="QUICKET 維護週期" suffix="years" value={form.quicketMaintenanceCycle} onChange={(value) => set('quicketMaintenanceCycle', value)} />
-              </div>
-
-              <NumberField label="碳價估算" suffix="NTD / ton" value={form.carbonPrice} onChange={(value) => set('carbonPrice', value)} />
-
-              <button className="mt-2 w-full rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-gray-50">產生專案摘要</button>
             </div>
+
+            {/* Section 2: 燈具方案比較 */}
+            <div className="mb-4 rounded-xl border border-gray-100 bg-white">
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 lg:py-4"
+                onClick={() => toggleSection('comparison')}
+                aria-expanded={openSections.comparison}
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">燈具方案比較</div>
+                  <div className="text-xs text-slate-500">比較現有燈具與 QUICKET 模組方案</div>
+                </div>
+                <div className="text-slate-400 lg:hidden">{openSections.comparison ? '收合' : '展開'}</div>
+              </button>
+
+              <div className={`${openSections.comparison ? 'block' : 'hidden'} px-4 pb-4 lg:block`}> 
+                <div className="space-y-3 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField label="現有瓦數" suffix="W" value={form.currentWatt} onChange={(value) => set('currentWatt', value)} />
+                    <NumberField label="QUICKET 瓦數" suffix="W" value={form.quicketWatt} onChange={(value) => set('quicketWatt', value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField label="現有維護成本" suffix="NTD/次" value={form.currentMaintenanceCost} onChange={(value) => set('currentMaintenanceCost', value)} />
+                    <NumberField label="QUICKET 模組成本" suffix="NTD/次" value={form.quicketMaintenanceCost} onChange={(value) => set('quicketMaintenanceCost', value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField label="現有維護週期" suffix="years" value={form.currentMaintenanceCycle} onChange={(value) => set('currentMaintenanceCycle', value)} />
+                    <NumberField label="QUICKET 維護週期" suffix="years" value={form.quicketMaintenanceCycle} onChange={(value) => set('quicketMaintenanceCycle', value)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: 使用條件 */}
+            <div className="mb-4 rounded-xl border border-gray-100 bg-white">
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 lg:py-4"
+                onClick={() => toggleSection('usage')}
+                aria-expanded={openSections.usage}
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">使用條件</div>
+                  <div className="text-xs text-slate-500">設定案場用電與運作條件</div>
+                </div>
+                <div className="text-slate-400 lg:hidden">{openSections.usage ? '收合' : '展開'}</div>
+              </button>
+
+              <div className={`${openSections.usage ? 'block' : 'hidden'} px-4 pb-4 lg:block`}> 
+                <div className="space-y-3 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField label="每日使用" suffix="hours" value={form.dailyHours} onChange={(value) => set('dailyHours', value)} />
+                    <NumberField label="每年使用" suffix="days" value={form.annualDays} onChange={(value) => set('annualDays', value)} />
+                  </div>
+                  <NumberField label="電價" suffix="NTD/kWh" value={form.electricityPrice} step={0.01} onChange={(value) => set('electricityPrice', value)} />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: ESG / 碳排假設 */}
+            <div className="mb-4 rounded-xl border border-gray-100 bg-white">
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 lg:py-4"
+                onClick={() => toggleSection('esg')}
+                aria-expanded={openSections.esg}
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">ESG / 碳排假設</div>
+                  <div className="text-xs text-slate-500">用於估算碳排與碳價效益</div>
+                </div>
+                <div className="text-slate-400 lg:hidden">{openSections.esg ? '收合' : '展開'}</div>
+              </button>
+
+              <div className={`${openSections.esg ? 'block' : 'hidden'} px-4 pb-4 lg:block`}> 
+                <div className="space-y-3 pt-2">
+                  <NumberField label="電力碳排係數" suffix="kg/kWh" value={form.carbonFactor} step={0.001} onChange={(value) => set('carbonFactor', value)} />
+                  <NumberField label="碳價估算" suffix="NTD / ton" value={form.carbonPrice} onChange={(value) => set('carbonPrice', value)} />
+                </div>
+              </div>
+            </div>
+
           </aside>
 
-          <section className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <KpiCard
-                icon={Zap}
-                title="年度節電量"
-                value={`${formatNumber(result.annualKwhSaved)} kWh`}
-                subtitle="Annual Energy Saving"
-              />
-              <KpiCard
-                icon={Calculator}
-                title="年度電費節約"
-                value={formatNTD(result.annualElectricitySaved)}
-                subtitle="Annual Electricity Cost Saving"
-              />
-              <KpiCard
-                icon={Leaf}
-                title="年度節碳量"
-                value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} t`}
-                subtitle="Annual Carbon Reduction"
-              />
-              <KpiCard
-                icon={Factory}
-                title={`${form.years} 年維護節約`}
-                value={formatNTD(result.maintenanceSaved)}
-                subtitle="Maintenance Cost Saving"
-              />
-              <KpiCard
-                icon={LineChart}
-                title={`${form.years} 年總效益`}
-                value={formatNTD(result.totalSaved)}
-                subtitle="Electricity + Maintenance + Carbon"
-              />
+          {/* Right: KPI + Charts */}
+          <section className="order-3 lg:order-2 space-y-6">
+            {/* Desktop KPI (visible only on lg+) */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <KpiCard icon={Zap} title="年度節電量" value={`${formatNumber(result.annualKwhSaved)} kWh`} subtitle="Annual Energy Saving" />
+              <KpiCard icon={Calculator} title="年度電費節約" value={formatNTD(result.annualElectricitySaved)} subtitle="Annual Electricity Cost Saving" />
+              <KpiCard icon={Leaf} title="年度節碳量" value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} t`} subtitle="Annual Carbon Reduction" />
+              <KpiCard icon={Factory} title={`${form.years} 年維護節約`} value={formatNTD(result.maintenanceSaved)} subtitle="Maintenance Cost Saving" />
+              <KpiCard icon={LineChart} title={`${form.years} 年總效益`} value={formatNTD(result.totalSaved)} subtitle="Electricity + Maintenance + Carbon" />
             </div>
 
             <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -500,6 +560,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
+
               </div>
             </div>
           </section>
