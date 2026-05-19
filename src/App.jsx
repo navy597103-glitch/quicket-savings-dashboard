@@ -248,48 +248,46 @@ function KpiOverlay({ activeKpi, result, form, onClose }) {
   if (!data) return null
 
   return (
-    <div className="absolute inset-0 z-30 flex items-stretch rounded-3xl bg-white p-4 shadow-2xl shadow-slate-300/60 ring-1 ring-blue-100 min-[900px]:p-5">
-      <div className="flex w-full flex-col">
-        <div className="mb-3 flex items-start justify-between gap-4">
-          <div className="flex gap-3">
-            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-              <Info size={18} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-blue-950">{data.title}</h2>
-              <p className="mt-1 text-xs leading-5 text-slate-500 min-[1200px]:text-sm">
-                本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。
-              </p>
-            </div>
+    <div className="rounded-3xl bg-white p-5 shadow-2xl shadow-slate-300/60 ring-1 ring-blue-100 min-[1200px]:p-6">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="flex gap-3">
+          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+            <Info size={18} />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            aria-label="關閉 KPI 說明"
-          >
-            <X size={18} />
-          </button>
+          <div>
+            <h2 className="text-lg font-bold text-blue-950">{data.title}</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。
+            </p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          aria-label="關閉 KPI 說明"
+        >
+          <X size={18} />
+        </button>
+      </div>
 
-        <div className="grid min-h-0 flex-1 gap-3 overflow-hidden min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-[1200px]:p-4">
-            <h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3>
-            <p className="text-xs leading-6 text-slate-600 min-[1200px]:text-sm min-[1200px]:leading-7">{data.description}</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-[1200px]:p-4">
-            <h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3>
-            <p className="text-xs leading-6 text-slate-700 min-[1200px]:text-sm min-[1200px]:leading-7">{data.formula}</p>
-          </div>
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3 min-[1200px]:p-4">
-            <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
-            <div className="space-y-1.5 text-xs leading-5 text-slate-700 min-[1200px]:text-sm min-[1200px]:leading-6">
-              {data.lines.map((line, index) => (
-                <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>
-                  {line}
-                </div>
-              ))}
-            </div>
+      <div className="grid gap-4 min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3>
+          <p className="text-sm leading-7 text-slate-600">{data.description}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3>
+          <p className="text-sm leading-7 text-slate-700">{data.formula}</p>
+        </div>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+          <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
+          <div className="space-y-2 text-sm leading-6 text-slate-700">
+            {data.lines.map((line, index) => (
+              <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>
+                {line}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -595,13 +593,16 @@ export default function App() {
           </aside>
 
           <section className="space-y-5">
-            <div className="relative">
-              <div className="grid gap-4 min-[900px]:grid-cols-5">
-                {kpis.map((kpi) => (
-                  <KpiCard key={kpi.key} kpi={kpi} active={activeKpi === kpi.key} onClick={() => setActiveKpi((prev) => (prev === kpi.key ? null : kpi.key))} />
-                ))}
-              </div>
-              <KpiOverlay activeKpi={activeKpi} result={result} form={form} onClose={() => setActiveKpi(null)} />
+            <div>
+              {activeKpi ? (
+                <KpiOverlay activeKpi={activeKpi} result={result} form={form} onClose={() => setActiveKpi(null)} />
+              ) : (
+                <div className="grid gap-4 min-[900px]:grid-cols-5">
+                  {kpis.map((kpi) => (
+                    <KpiCard key={kpi.key} kpi={kpi} active={false} onClick={() => setActiveKpi(kpi.key)} />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
