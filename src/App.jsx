@@ -15,6 +15,7 @@ import {
   Settings2,
   TrendingUp,
   Wrench,
+  X,
   Zap,
 } from 'lucide-react'
 import {
@@ -89,8 +90,8 @@ function buildDefaultParams(siteType = 'factory', luminaireType = 'bay-light') {
     annualDays: site.annualDays,
     electricityPrice: site.electricityPrice,
     carbonFactor: site.carbonFactor,
-    currentMaintenanceCost: Math.round(luminaire.currentMaintenanceCost * maintenanceFactor / 100) * 100,
-    quicketMaintenanceCost: Math.round(luminaire.quicketMaintenanceCost * maintenanceFactor / 100) * 100,
+    currentMaintenanceCost: Math.round((luminaire.currentMaintenanceCost * maintenanceFactor) / 100) * 100,
+    quicketMaintenanceCost: Math.round((luminaire.quicketMaintenanceCost * maintenanceFactor) / 100) * 100,
     currentMaintenanceCycle: luminaire.currentMaintenanceCycle,
     quicketMaintenanceCycle: luminaire.quicketMaintenanceCycle,
     years: site.years,
@@ -99,11 +100,11 @@ function buildDefaultParams(siteType = 'factory', luminaireType = 'bay-light') {
 }
 
 const scenarioPresets = {
-  '工業天井燈': buildDefaultParams('factory', 'bay-light'),
-  '長時倉儲': buildDefaultParams('warehouse', 'bay-light'),
-  '商辦崁燈': buildDefaultParams('office', 'downlight'),
-  '公共筒燈': buildDefaultParams('public', 'cylinder'),
-  '戶外路燈': buildDefaultParams('outdoor', 'street-light'),
+  工業天井燈: buildDefaultParams('factory', 'bay-light'),
+  長時倉儲: buildDefaultParams('warehouse', 'bay-light'),
+  商辦崁燈: buildDefaultParams('office', 'downlight'),
+  公共筒燈: buildDefaultParams('public', 'cylinder'),
+  戶外路燈: buildDefaultParams('outdoor', 'street-light'),
 }
 
 function getChangedFields(form) {
@@ -187,28 +188,12 @@ function KpiCard({ kpi, active, onClick }) {
   )
 }
 
-function MetricBlock({ icon: Icon, title, text }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-700">
-        <Icon size={22} />
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-slate-800">{title}</div>
-        <div className="text-xs text-slate-500">{text}</div>
-      </div>
-    </div>
-  )
-}
-
-function KpiExplanation({ activeKpi, result, form }) {
+function getKpiExplanation(activeKpi, result, form) {
   if (!activeKpi) return null
-
-  const data = {
+  return {
     total: {
       title: `${form.years} 年總效益如何計算`,
-      description:
-        `${form.years} 年總效益整合電費節約、維護成本節約與碳效益估算，用來快速評估 QUICKET 導入後在整個使用週期內可能帶來的總體財務改善。`,
+      description: `${form.years} 年總效益整合電費節約、維護成本節約與碳效益估算，用來快速評估 QUICKET 導入後在整個使用週期內可能帶來的總體財務改善。`,
       formula: `${form.years} 年總效益 = ${form.years} 年累積電費節約 + ${form.years} 年維護成本節約 + ${form.years} 年碳效益估算`,
       lines: [
         `${form.years} 年累積電費節約 = ${formatNTD(result.annualElectricitySaved)} × ${form.years} = ${formatNTD(result.totalElectricitySaved)}`,
@@ -229,9 +214,9 @@ function KpiExplanation({ activeKpi, result, form }) {
     maintenance: {
       title: `${form.years} 年維護節約如何計算`,
       description: `${form.years} 年維護節約是比較傳統整燈更換與 QUICKET 模組更換在維護成本上的差異。QUICKET 維護時可更換模組，不必反覆更換整組燈具。`,
-      formula: `${form.years} 年維護節約 = 燈具數量 × (現有維護成本 - QUICKET 維護成本) × 維護次數`,
+      formula: `${form.years} 年維護節約 = 現有方案累積維護成本 - QUICKET 累積維護成本`,
       lines: [
-        `維護次數 = floor(${form.years} ÷ ${Math.max(form.currentMaintenanceCycle || 1, 1)}) = ${result.currentMaintenanceCount} 次；QUICKET = ${result.quicketMaintenanceCount} 次`,
+        `維護次數 = 現有方案 ${result.currentMaintenanceCount} 次；QUICKET ${result.quicketMaintenanceCount} 次`,
         `現有方案維護成本 = ${formatNumber(form.quantity)} × ${formatNTD(form.currentMaintenanceCost)} × ${result.currentMaintenanceCount} = ${formatNTD(result.currentMaintenanceTotal)}`,
         `QUICKET 維護成本 = ${formatNumber(form.quantity)} × ${formatNTD(form.quicketMaintenanceCost)} × ${result.quicketMaintenanceCount} = ${formatNTD(result.quicketMaintenanceTotal)}`,
         `維護節約 = ${formatNTD(result.maintenanceSaved)}`,
@@ -256,45 +241,59 @@ function KpiExplanation({ activeKpi, result, form }) {
       ],
     },
   }[activeKpi]
+}
+
+function KpiOverlay({ activeKpi, result, form, onClose }) {
+  const data = getKpiExplanation(activeKpi, result, form)
+  if (!data) return null
 
   return (
-    <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="flex gap-3">
-          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-            <Info size={18} />
+    <div className="absolute inset-0 z-30 flex items-stretch rounded-3xl bg-white p-4 shadow-2xl shadow-slate-300/60 ring-1 ring-blue-100 min-[900px]:p-5">
+      <div className="flex w-full flex-col">
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div className="flex gap-3">
+            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+              <Info size={18} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-blue-950">{data.title}</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-500 min-[1200px]:text-sm">
+                本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-blue-950">{data.title}</h2>
-            <p className="mt-1 text-sm text-slate-500">本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。</p>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            aria-label="關閉 KPI 說明"
+          >
+            <X size={18} />
+          </button>
         </div>
-        <button className="rounded-full border border-blue-100 p-2 text-blue-700" aria-label="收合說明">
-          <ChevronUp size={18} />
-        </button>
-      </div>
 
-      <div className="grid gap-4 min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3>
-          <p className="text-sm leading-7 text-slate-600">{data.description}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3>
-          <p className="text-sm leading-7 text-slate-700">{data.formula}</p>
-        </div>
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
-          <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
-          <div className="space-y-2 text-sm leading-6 text-slate-700">
-            {data.lines.map((line, index) => (
-              <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>
-                {line}
-              </div>
-            ))}
+        <div className="grid min-h-0 flex-1 gap-3 overflow-hidden min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-[1200px]:p-4">
+            <h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3>
+            <p className="text-xs leading-6 text-slate-600 min-[1200px]:text-sm min-[1200px]:leading-7">{data.description}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-[1200px]:p-4">
+            <h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3>
+            <p className="text-xs leading-6 text-slate-700 min-[1200px]:text-sm min-[1200px]:leading-7">{data.formula}</p>
+          </div>
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3 min-[1200px]:p-4">
+            <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
+            <div className="space-y-1.5 text-xs leading-5 text-slate-700 min-[1200px]:text-sm min-[1200px]:leading-6">
+              {data.lines.map((line, index) => (
+                <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>
+                  {line}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -310,6 +309,20 @@ function TabButton({ active, icon: Icon, label, onClick }) {
       <Icon size={18} />
       {label}
     </button>
+  )
+}
+
+function MetricBlock({ icon: Icon, title, text }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-700">
+        <Icon size={22} />
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-slate-800">{title}</div>
+        <div className="text-xs text-slate-500">{text}</div>
+      </div>
+    </div>
   )
 }
 
@@ -423,7 +436,6 @@ export default function App() {
     const annualCarbonSaved = annualKwhSaved * carbonFactor
     const currentMaintenanceCount = Math.floor(years / currentMaintenanceCycle)
     const quicketMaintenanceCount = Math.floor(years / quicketMaintenanceCycle)
-    const sharedMaintenanceCount = Math.floor(years / Math.max(currentMaintenanceCycle, 1))
     const currentMaintenanceTotal = quantity * currentMaintenanceCost * currentMaintenanceCount
     const quicketMaintenanceTotal = quantity * quicketMaintenanceCost * quicketMaintenanceCount
     const maintenanceSaved = currentMaintenanceTotal - quicketMaintenanceTotal
@@ -456,7 +468,6 @@ export default function App() {
       annualCarbonSaved,
       currentMaintenanceCount,
       quicketMaintenanceCount,
-      sharedMaintenanceCount,
       currentMaintenanceTotal,
       quicketMaintenanceTotal,
       maintenanceSaved,
@@ -484,9 +495,7 @@ export default function App() {
             <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-12 w-auto shrink-0 object-contain md:h-14" />
             <div className="md:ml-4">
               <h1 className="text-3xl font-bold tracking-[0.08em] text-blue-950 md:text-4xl">QUICKET 導入效益儀表板</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-                快速比較現有照明方案與 QUICKET 導入後的節能、維護與長期成本效益。
-              </p>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">快速比較現有照明方案與 QUICKET 導入後的節能、維護與長期成本效益。</p>
             </div>
           </div>
         </header>
@@ -545,11 +554,7 @@ export default function App() {
               </div>
 
               <div className="rounded-2xl border border-blue-100 bg-blue-50/40">
-                <button
-                  type="button"
-                  onClick={() => setAdvancedOpen((value) => !value)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                >
+                <button type="button" onClick={() => setAdvancedOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
                   <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-white p-2 text-blue-700 shadow-sm">
                       <Calculator size={18} />
@@ -590,13 +595,14 @@ export default function App() {
           </aside>
 
           <section className="space-y-5">
-            <div className="grid gap-4 min-[900px]:grid-cols-5">
-              {kpis.map((kpi) => (
-                <KpiCard key={kpi.key} kpi={kpi} active={activeKpi === kpi.key} onClick={() => setActiveKpi((prev) => (prev === kpi.key ? null : kpi.key))} />
-              ))}
+            <div className="relative">
+              <div className="grid gap-4 min-[900px]:grid-cols-5">
+                {kpis.map((kpi) => (
+                  <KpiCard key={kpi.key} kpi={kpi} active={activeKpi === kpi.key} onClick={() => setActiveKpi((prev) => (prev === kpi.key ? null : kpi.key))} />
+                ))}
+              </div>
+              <KpiOverlay activeKpi={activeKpi} result={result} form={form} onClose={() => setActiveKpi(null)} />
             </div>
-
-            <KpiExplanation activeKpi={activeKpi} result={result} form={form} />
 
             <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
               <div className="grid grid-cols-2 border-b border-slate-200 bg-white min-[900px]:grid-cols-5">
@@ -654,12 +660,8 @@ export default function App() {
                     <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 shadow-sm">
                       <h3 className="mb-4 text-lg font-bold text-blue-950">客戶溝通重點</h3>
                       <div className="space-y-4 text-sm leading-7 text-slate-700">
-                        <p>
-                          本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，QUICKET 可在節能、維護與碳效益上帶來顯著改善。
-                        </p>
-                        <p>
-                          對業主而言，價值不只來自低瓦數運作，也來自模組化維護與減少整燈更換所形成的長期營運成本下降。
-                        </p>
+                        <p>本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，QUICKET 可在節能、維護與碳效益上帶來顯著改善。</p>
+                        <p>對業主而言，價值不只來自低瓦數運作，也來自模組化維護與減少整燈更換所形成的長期營運成本下降。</p>
                         <div className="rounded-2xl border border-blue-100 bg-white p-4 text-blue-800">
                           {form.years} 年估算總效益：<span className="font-bold">{compactNtd(result.totalSaved)}</span>
                         </div>
