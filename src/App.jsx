@@ -487,13 +487,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-[1600px] px-4 py-5 lg:px-8">
-        <header className="mb-5 rounded-[28px] border border-slate-200 bg-white px-7 py-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start">
-            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-12 w-auto shrink-0 object-contain md:h-14" />
-            <div className="md:ml-4">
-              <h1 className="text-3xl font-bold tracking-[0.08em] text-blue-950 md:text-4xl">QUICKET 導入效益儀表板</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">快速比較現有照明方案與 QUICKET 導入後的節能、維護與長期成本效益。</p>
+      <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-8">
+        <header className="mb-4 rounded-[28px] border border-slate-200 bg-white px-6 py-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-10 w-auto shrink-0 object-contain md:h-11" />
+            <div className="md:ml-5">
+              <h1 className="text-2xl font-bold tracking-[0.08em] text-blue-950 md:text-3xl">QUICKET 導入效益儀表板</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-5 text-slate-600">快速比較現有照明方案與 QUICKET 導入後的節能、維護與長期成本效益。</p>
             </div>
           </div>
         </header>
