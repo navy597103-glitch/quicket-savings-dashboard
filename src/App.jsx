@@ -17,8 +17,6 @@ import {
   Zap,
 } from 'lucide-react'
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -84,6 +82,34 @@ const translations = {
     carbonCommentEU:(v)=> `歐洲 EUA：約 ${v}`,
     carbonCommentTW:(v)=> `台灣碳費：約 ${v}`,
     recycleComment:(v)=> `歷次模組與電源更換物料暫估回收價值約 ${v}。`,
+    customTag: '已自訂',
+    wholeReplacementNote: '整燈拆換、重新安裝與相關施工成本。',
+    moduleReplacementNote: '模組更換、較少拆裝與較低施工干擾。',
+    chartNames: { currentElectricity:'現有方案電費', quicketElectricity:'QUICKET 電費', currentMaintenance:'整燈更換維護成本', quicketMaintenance:'QUICKET 模組維護成本', currentCarbon:'現有方案碳排', quicketCarbon:'QUICKET 碳排' },
+    kpiExplain: {
+      totalTitle: (y)=> `${y} 年總效益如何計算`,
+      totalDesc: (y)=> `${y} 年總效益整合電費節約、維護成本節約與碳效益估算，用來快速評估 QUICKET 導入後在整個使用週期內可能帶來的總體財務改善。`,
+      totalFormula: (y)=> `${y} 年總效益 = ${y} 年累積電費節約 + ${y} 年維護成本節約 + ${y} 年碳效益估算`,
+      totalLines: (f,r)=> [`${f.years} 年累積電費節約 = ${formatNTD(r.annualElectricitySaved)} × ${f.years} = ${formatNTD(r.totalElectricitySaved)}`, `${f.years} 年維護成本節約 = 現有方案維護 ${formatNTD(r.currentMaintenanceTotal)} - QUICKET 維護 ${formatNTD(r.quicketMaintenanceTotal)} = ${formatNTD(r.maintenanceSaved)}`, `${f.years} 年碳效益估算 = ${formatNumber(r.annualCarbonSaved / 1000, 1)} tCO₂e × ${f.years} × ${formatNTD(f.carbonPrice)} ≈ ${formatNTD(r.carbonValue)}`, `合計 ≈ ${compactNtd(r.totalSaved)}`],
+      electricityTitle: '年度電費節約如何計算',
+      electricityDesc: '年度電費節約是比較現有照明方案與 QUICKET 在相同使用條件下，因瓦數降低而產生的年度電費差額。',
+      electricityFormula: '年度電費節約 = 燈具數量 × (現有瓦數 - QUICKET 瓦數) ÷ 1000 × 每日使用小時 × 每年使用天數 × 電價',
+      electricityLines: (f,r)=> [`年度節電量 = ${formatNumber(f.quantity)} × (${f.currentWatt}W - ${f.quicketWatt}W) ÷ 1000 × ${f.dailyHours} × ${f.annualDays} = ${formatNumber(r.annualKwhSaved)} kWh`, `年度電費節約 = ${formatNumber(r.annualKwhSaved)} × ${formatNTD(f.electricityPrice)} = ${formatNTD(r.annualElectricitySaved)}`],
+      maintenanceTitle: (y)=> `${y} 年維護節約如何計算`,
+      maintenanceDesc: '本指標比較現有照明方案與 QUICKET 在維護方式上的成本差異。現有方案以整燈更換為基準，QUICKET 以模組更換為基準；材料、工時、施工難度與營運干擾都可反映在單次維護成本中。',
+      maintenanceFormula: '維護節約 = 現有方案維護總成本 - QUICKET 維護總成本；維護總成本 = 燈具數量 × 單次維護成本 × 維護次數',
+      maintenanceLines: (f,r)=> [`維護次數 = floor(計算年限 ÷ 維護週期)：現有方案 ${r.currentMaintenanceCount} 次；QUICKET ${r.quicketMaintenanceCount} 次`, `現有方案：以整燈拆換、重新安裝與相關施工成本估算 = ${formatNumber(f.quantity)} × ${formatNTD(f.currentMaintenanceCost)} × ${r.currentMaintenanceCount} = ${formatNTD(r.currentMaintenanceTotal)}`, `QUICKET：以模組更換、較少拆裝與較低施工干擾估算 = ${formatNumber(f.quantity)} × ${formatNTD(f.quicketMaintenanceCost)} × ${r.quicketMaintenanceCount} = ${formatNTD(r.quicketMaintenanceTotal)}`, `維護節約 = ${formatNTD(r.maintenanceSaved)}`],
+      energyTitle: '年度節電量如何計算',
+      energyDesc: '年度節電量是比較現有照明與 QUICKET 在相同使用時間下，每年可減少的用電量，也是電費節約與減碳量計算的基礎。',
+      energyFormula: '年度節電量 = 燈具數量 × 單盞瓦數差 ÷ 1000 × 每日使用小時 × 每年使用天數',
+      energyLines: (f,r)=> [`單盞瓦數差 = ${f.currentWatt}W - ${f.quicketWatt}W = ${f.currentWatt - f.quicketWatt}W`, `年度節電量 = ${formatNumber(f.quantity)} × ${f.currentWatt - f.quicketWatt} ÷ 1000 × ${f.dailyHours} × ${f.annualDays} = ${formatNumber(r.annualKwhSaved)} kWh`],
+      carbonTitle: '年度減碳量如何計算',
+      carbonDesc: '年度減碳量是將年度節電量換算為對應的碳排放減少量，用來評估 QUICKET 在 ESG、永續報告或碳管理上的潛在貢獻。',
+      carbonFormula: '年度減碳量 = 年度節電量 × 碳排係數 ÷ 1000',
+      carbonLines: (f,r)=> [`年度減碳量 = ${formatNumber(r.annualKwhSaved)} × ${f.carbonFactor} ÷ 1000 = ${formatNumber(r.annualCarbonSaved / 1000, 1)} tCO₂e`, '若用於正式 ESG 報告、碳盤查或碳權申請，應依制度採認的係數與方法學重新確認。'],
+      explainerNote: '本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。',
+      sectionDesc: '指標說明', sectionFormula:'計算公式', sectionCase:'本案例代入', close:'關閉 KPI 說明'
+    },
     units: { pcs:'盞', years:'年', w:'W', hr:'小時', day:'天', ntdPerKwh:'NTD/kWh', kgPerKwh:'kg/kWh', ntdPerTime:'NTD/次', ntdPerTon:'NTD/ton' },
     siteLabels: { factory:'工廠', warehouse:'倉儲', office:'商辦', public:'公共空間', outdoor:'戶外場域' },
     luminaireLabels: { downlight:'崁燈', cylinder:'筒燈', 'bay-light':'天井燈', 'flood-light':'投射燈', 'street-light':'路燈', custom:'客製型（瓦數自訂）' },
@@ -123,6 +149,34 @@ const translations = {
     carbonCommentEU:(v)=> `EU EUA: ${v}`,
     carbonCommentTW:(v)=> `Taiwan carbon fee: ${v}`,
     recycleComment:(v)=> `Estimated recovery value from replaced modules and drivers: ${v}.`,
+    customTag: 'Customized',
+    wholeReplacementNote: 'Whole luminaire removal, re-installation, and related field work.',
+    moduleReplacementNote: 'Module replacement with less disassembly and lower field disruption.',
+    chartNames: { currentElectricity:'Current electricity cost', quicketElectricity:'QUICKET electricity cost', currentMaintenance:'Whole replacement maintenance cost', quicketMaintenance:'QUICKET module maintenance cost', currentCarbon:'Current carbon emissions', quicketCarbon:'QUICKET carbon emissions' },
+    kpiExplain: {
+      totalTitle: (y)=> `${y}-Year Total Benefit Calculation`,
+      totalDesc: (y)=> `The ${y}-year total benefit combines electricity savings, maintenance savings, and estimated carbon value to evaluate the lifecycle financial improvement after QUICKET deployment.`,
+      totalFormula: (y)=> `${y}-Year Total Benefit = cumulative electricity saving + maintenance saving + estimated carbon value`,
+      totalLines: (f,r)=> [`Cumulative electricity saving = ${formatNTD(r.annualElectricitySaved)} × ${f.years} = ${formatNTD(r.totalElectricitySaved)}`, `Maintenance saving = current plan ${formatNTD(r.currentMaintenanceTotal)} - QUICKET ${formatNTD(r.quicketMaintenanceTotal)} = ${formatNTD(r.maintenanceSaved)}`, `Estimated carbon value = ${formatNumber(r.annualCarbonSaved / 1000, 1)} tCO₂e × ${f.years} × ${formatNTD(f.carbonPrice)} ≈ ${formatNTD(r.carbonValue)}`, `Total ≈ ${compactNtd(r.totalSaved)}`],
+      electricityTitle: 'Annual Electricity Saving Calculation',
+      electricityDesc: 'This compares the annual electricity cost difference between the current lighting plan and QUICKET under the same operating conditions.',
+      electricityFormula: 'Annual saving = quantity × (current wattage - QUICKET wattage) ÷ 1000 × daily hours × annual days × electricity price',
+      electricityLines: (f,r)=> [`Annual energy saving = ${formatNumber(f.quantity)} × (${f.currentWatt}W - ${f.quicketWatt}W) ÷ 1000 × ${f.dailyHours} × ${f.annualDays} = ${formatNumber(r.annualKwhSaved)} kWh`, `Annual electricity saving = ${formatNumber(r.annualKwhSaved)} × ${formatNTD(f.electricityPrice)} = ${formatNTD(r.annualElectricitySaved)}`],
+      maintenanceTitle: (y)=> `${y}-Year Maintenance Saving Calculation`,
+      maintenanceDesc: 'This compares maintenance cost between whole-luminaire replacement and QUICKET module replacement. Material cost, labor, work difficulty, and operational interruption can all be reflected in the per-event maintenance cost.',
+      maintenanceFormula: 'Maintenance saving = current maintenance total - QUICKET maintenance total; maintenance total = quantity × per-event maintenance cost × number of events',
+      maintenanceLines: (f,r)=> [`Maintenance events = floor(analysis period ÷ maintenance cycle): current plan ${r.currentMaintenanceCount}; QUICKET ${r.quicketMaintenanceCount}`, `Current plan: whole-luminaire replacement = ${formatNumber(f.quantity)} × ${formatNTD(f.currentMaintenanceCost)} × ${r.currentMaintenanceCount} = ${formatNTD(r.currentMaintenanceTotal)}`, `QUICKET: module replacement = ${formatNumber(f.quantity)} × ${formatNTD(f.quicketMaintenanceCost)} × ${r.quicketMaintenanceCount} = ${formatNTD(r.quicketMaintenanceTotal)}`, `Maintenance saving = ${formatNTD(r.maintenanceSaved)}`],
+      energyTitle: 'Annual Energy Saving Calculation',
+      energyDesc: 'Annual energy saving compares the energy reduction between the current lighting plan and QUICKET under the same operating schedule.',
+      energyFormula: 'Annual energy saving = quantity × wattage difference ÷ 1000 × daily hours × annual days',
+      energyLines: (f,r)=> [`Wattage difference = ${f.currentWatt}W - ${f.quicketWatt}W = ${f.currentWatt - f.quicketWatt}W`, `Annual energy saving = ${formatNumber(f.quantity)} × ${f.currentWatt - f.quicketWatt} ÷ 1000 × ${f.dailyHours} × ${f.annualDays} = ${formatNumber(r.annualKwhSaved)} kWh`],
+      carbonTitle: 'Annual Carbon Reduction Calculation',
+      carbonDesc: 'Annual carbon reduction converts saved electricity into avoided emissions, supporting ESG, sustainability reporting, or carbon management evaluation.',
+      carbonFormula: 'Annual carbon reduction = annual energy saving × carbon factor ÷ 1000',
+      carbonLines: (f,r)=> [`Annual carbon reduction = ${formatNumber(r.annualKwhSaved)} × ${f.carbonFactor} ÷ 1000 = ${formatNumber(r.annualCarbonSaved / 1000, 1)} tCO₂e`, 'For formal ESG reporting, carbon inventory, or carbon credit application, the accepted factor and methodology should be confirmed separately.'],
+      explainerNote: 'This metric is calculated from the estimate inputs and advanced parameters; users may adjust assumptions to reflect actual site conditions.',
+      sectionDesc: 'Description', sectionFormula:'Formula', sectionCase:'Applied Case', close:'Close KPI details'
+    },
     units: { pcs:'pcs', years:'yrs', w:'W', hr:'hrs', day:'days', ntdPerKwh:'NTD/kWh', kgPerKwh:'kg/kWh', ntdPerTime:'NTD/ea', ntdPerTon:'NTD/ton' },
     siteLabels: { factory:'Factory', warehouse:'Warehouse', office:'Office', public:'Public Space', outdoor:'Outdoor' },
     luminaireLabels: { downlight:'Downlight', cylinder:'Cylinder Light', 'bay-light':'High Bay', 'flood-light':'Flood Light', 'street-light':'Street Light', custom:'Custom (Editable Wattage)' },
@@ -211,22 +265,22 @@ function getChangedFields(form) {
   return Object.keys(base).filter((key) => form[key] !== base[key])
 }
 
-function Field({ label, suffix, customized, children }) {
+function Field({ label, suffix, customized, customLabel = translations.zh.customTag, children }) {
   return (
     <label className="block space-y-1.5">
       <div className="flex min-h-[1.35rem] flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500">
         <span className="break-keep leading-4">{label}</span>
         {suffix && <span className="whitespace-nowrap leading-4 text-slate-500">{suffix}</span>}
-        {customized && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">已自訂</span>}
+        {customized && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">{customLabel}</span>}
       </div>
       {children}
     </label>
   )
 }
 
-function NumberField({ label, suffix, value, onChange, min = 0, step = 1, customized = false }) {
+function NumberField({ label, suffix, value, onChange, min = 0, step = 1, customized = false, customLabel }) {
   return (
-    <Field label={label} suffix={suffix} customized={customized}>
+    <Field label={label} suffix={suffix} customized={customized} customLabel={customLabel}>
       <input
         type="number"
         min={min}
@@ -242,9 +296,9 @@ function NumberField({ label, suffix, value, onChange, min = 0, step = 1, custom
   )
 }
 
-function SelectField({ label, value, onChange, options, customized = false, labels = {} }) {
+function SelectField({ label, value, onChange, options, customized = false, labels = {}, customLabel }) {
   return (
-    <Field label={label} customized={customized}>
+    <Field label={label} customized={customized} customLabel={customLabel}>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -258,13 +312,13 @@ function SelectField({ label, value, onChange, options, customized = false, labe
   )
 }
 
-function QuicketWattField({ luminaireType, value, onChange, customized = false, label, unit }) {
+function QuicketWattField({ luminaireType, value, onChange, customized = false, label, unit, customLabel }) {
   if (luminaireType === 'custom') {
-    return <NumberField label={label} suffix={unit} value={value} customized={customized} onChange={onChange} />
+    return <NumberField label={label} suffix={unit} value={value} customized={customized} customLabel={customLabel} onChange={onChange} />
   }
   const options = quicketWattOptions[luminaireType] || []
   return (
-    <Field label={label} suffix={unit} customized={customized}>
+    <Field label={label} suffix={unit} customized={customized} customLabel={customLabel}>
       <select
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
@@ -282,76 +336,33 @@ function KpiCard({ kpi, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`group relative min-h-[148px] rounded-3xl border bg-white p-4 shadow-md text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${active ? 'border-blue-600 shadow-lg shadow-blue-100/70' : 'border-slate-300'}`}
+      className={`group relative flex h-[190px] w-full flex-col rounded-3xl border bg-white p-4 text-left shadow-md transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${active ? 'border-blue-600 shadow-lg shadow-blue-100/70' : 'border-slate-300'}`}
     >
       {active && <div className="absolute inset-x-8 top-0 h-1 rounded-b-full bg-blue-600" />}
-      <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full transition ${active ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-blue-700 group-hover:bg-blue-50'}`}>
-        <Icon size={26} strokeWidth={2.2} />
+      <div className={`mx-auto mb-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${active ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-blue-700 group-hover:bg-blue-50'}`}>
+        <Icon size={24} strokeWidth={2.2} />
       </div>
-      <div className={`text-center text-base font-semibold ${active ? 'text-blue-950' : 'text-slate-900'}`}>{kpi.title}</div>
-      <div className="mt-2 text-center text-xl font-bold tracking-tight text-blue-900">{kpi.value}</div>
-      <div className="mt-2 text-center text-xs leading-5 text-slate-500">{kpi.caption}</div>
+      <div className={`flex min-h-[48px] items-center justify-center text-center text-sm font-semibold leading-5 ${active ? 'text-blue-950' : 'text-slate-900'}`}>{kpi.title}</div>
+      <div className="flex min-h-[34px] items-center justify-center text-center text-xl font-bold tracking-tight text-blue-900">{kpi.value}</div>
+      <div className="flex min-h-[40px] items-center justify-center text-center text-xs leading-5 text-slate-500">{kpi.caption}</div>
     </button>
   )
 }
 
-function getKpiExplanation(activeKpi, result, form) {
+function getKpiExplanation(activeKpi, result, form, t) {
   if (!activeKpi) return null
+  const e = t.kpiExplain
   return {
-    total: {
-      title: `${form.years} 年總效益如何計算`,
-      description: `${form.years} 年總效益整合電費節約、維護成本節約與碳效益估算，用來快速評估 QUICKET 導入後在整個使用週期內可能帶來的總體財務改善。`,
-      formula: `${form.years} 年總效益 = ${form.years} 年累積電費節約 + ${form.years} 年維護成本節約 + ${form.years} 年碳效益估算`,
-      lines: [
-        `${form.years} 年累積電費節約 = ${formatNTD(result.annualElectricitySaved)} × ${form.years} = ${formatNTD(result.totalElectricitySaved)}`,
-        `${form.years} 年維護成本節約 = 現有方案維護 ${formatNTD(result.currentMaintenanceTotal)} - QUICKET 維護 ${formatNTD(result.quicketMaintenanceTotal)} = ${formatNTD(result.maintenanceSaved)}`,
-        `${form.years} 年碳效益估算 = ${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e × ${form.years} × ${formatNTD(form.carbonPrice)} ≈ ${formatNTD(result.carbonValue)}`,
-        `合計 ≈ ${compactNtd(result.totalSaved)}`,
-      ],
-    },
-    electricityCost: {
-      title: '年度電費節約如何計算',
-      description: '年度電費節約是比較現有照明方案與 QUICKET 在相同使用條件下，因瓦數降低而產生的年度電費差額。',
-      formula: '年度電費節約 = 燈具數量 × (現有瓦數 - QUICKET 瓦數) ÷ 1000 × 每日使用小時 × 每年使用天數 × 電價',
-      lines: [
-        `年度節電量 = ${formatNumber(form.quantity)} × (${form.currentWatt}W - ${form.quicketWatt}W) ÷ 1000 × ${form.dailyHours} × ${form.annualDays} = ${formatNumber(result.annualKwhSaved)} kWh`,
-        `年度電費節約 = ${formatNumber(result.annualKwhSaved)} × ${formatNTD(form.electricityPrice)} = ${formatNTD(result.annualElectricitySaved)}`,
-      ],
-    },
-    maintenance: {
-      title: `${form.years} 年維護節約如何計算`,
-      description: '本指標比較現有照明方案與 QUICKET 在維護方式上的成本差異。現有方案以整燈更換為基準，QUICKET 以模組更換為基準；材料、工時、施工難度與營運干擾都可反映在單次維護成本中。',
-      formula: '維護節約 = 現有方案維護總成本 - QUICKET 維護總成本；維護總成本 = 燈具數量 × 單次維護成本 × 維護次數',
-      lines: [
-        `維護次數 = floor(計算年限 ÷ 維護週期)：現有方案 ${result.currentMaintenanceCount} 次；QUICKET ${result.quicketMaintenanceCount} 次`,
-        `現有方案：以整燈拆換、重新安裝與相關施工成本估算 = ${formatNumber(form.quantity)} × ${formatNTD(form.currentMaintenanceCost)} × ${result.currentMaintenanceCount} = ${formatNTD(result.currentMaintenanceTotal)}`,
-        `QUICKET：以模組更換、較少拆裝與較低施工干擾估算 = ${formatNumber(form.quantity)} × ${formatNTD(form.quicketMaintenanceCost)} × ${result.quicketMaintenanceCount} = ${formatNTD(result.quicketMaintenanceTotal)}`,
-        `維護節約 = ${formatNTD(result.maintenanceSaved)}`,
-      ],
-    },
-    energy: {
-      title: '年度節電量如何計算',
-      description: '年度節電量是比較現有照明與 QUICKET 在相同使用時間下，每年可減少的用電量，也是電費節約與減碳量計算的基礎。',
-      formula: '年度節電量 = 燈具數量 × 單盞瓦數差 ÷ 1000 × 每日使用小時 × 每年使用天數',
-      lines: [
-        `單盞瓦數差 = ${form.currentWatt}W - ${form.quicketWatt}W = ${form.currentWatt - form.quicketWatt}W`,
-        `年度節電量 = ${formatNumber(form.quantity)} × ${form.currentWatt - form.quicketWatt} ÷ 1000 × ${form.dailyHours} × ${form.annualDays} = ${formatNumber(result.annualKwhSaved)} kWh`,
-      ],
-    },
-    carbon: {
-      title: '年度減碳量如何計算',
-      description: '年度減碳量是將年度節電量換算為對應的碳排放減少量，用來評估 QUICKET 在 ESG、永續報告或碳管理上的潛在貢獻。',
-      formula: '年度減碳量 = 年度節電量 × 碳排係數 ÷ 1000',
-      lines: [
-        `年度減碳量 = ${formatNumber(result.annualKwhSaved)} × ${form.carbonFactor} ÷ 1000 = ${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`,
-        '若用於正式 ESG 報告、碳盤查或碳權申請，應依制度採認的係數與方法學重新確認。',
-      ],
-    },
+    total: { title: e.totalTitle(form.years), description: e.totalDesc(form.years), formula: e.totalFormula(form.years), lines: e.totalLines(form, result) },
+    electricityCost: { title: e.electricityTitle, description: e.electricityDesc, formula: e.electricityFormula, lines: e.electricityLines(form, result) },
+    maintenance: { title: e.maintenanceTitle(form.years), description: e.maintenanceDesc, formula: e.maintenanceFormula, lines: e.maintenanceLines(form, result) },
+    energy: { title: e.energyTitle, description: e.energyDesc, formula: e.energyFormula, lines: e.energyLines(form, result) },
+    carbon: { title: e.carbonTitle, description: e.carbonDesc, formula: e.carbonFormula, lines: e.carbonLines(form, result) },
   }[activeKpi]
 }
 
-function KpiOverlay({ activeKpi, result, form, onClose }) {
-  const data = getKpiExplanation(activeKpi, result, form)
+function KpiOverlay({ activeKpi, result, form, onClose, t }) {
+  const data = getKpiExplanation(activeKpi, result, form, t)
   if (!data) return null
   return (
     <div className="rounded-3xl bg-white p-5 shadow-2xl shadow-slate-300/60 ring-1 ring-blue-100 min-[1200px]:p-6">
@@ -360,16 +371,16 @@ function KpiOverlay({ activeKpi, result, form, onClose }) {
           <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white"><Info size={18} /></div>
           <div>
             <h2 className="text-lg font-bold text-blue-950">{data.title}</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">{t.kpiExplain.explainerNote}</p>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" aria-label="關閉 KPI 說明"><X size={18} /></button>
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" aria-label={t.kpiExplain.close}><X size={18} /></button>
       </div>
       <div className="grid gap-4 min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
-        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3><p className="text-sm leading-7 text-slate-600">{data.description}</p></div>
-        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3><p className="text-sm leading-7 text-slate-700">{data.formula}</p></div>
+        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionDesc}</h3><p className="text-sm leading-7 text-slate-600">{data.description}</p></div>
+        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionFormula}</h3><p className="text-sm leading-7 text-slate-700">{data.formula}</p></div>
         <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4">
-          <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
+          <h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionCase}</h3>
           <div className="space-y-2 text-sm leading-6 text-slate-700">
             {data.lines.map((line, index) => <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>{line}</div>)}
           </div>
@@ -393,7 +404,7 @@ function MetricBlock({ icon: Icon, title, children }) {
 
 function ChartBadge({ label, value }) {
   return (
-    <div className="shrink-0 rounded-2xl border border-blue-200 bg-white px-3 py-2 text-right shadow-sm">
+    <div className="shrink-0 rounded-2xl border border-blue-200 bg-white px-2.5 py-2 text-right shadow-sm">
       <div className="text-[11px] font-semibold text-slate-600">{label}</div>
       <div className="text-sm font-bold text-blue-700">{value}</div>
     </div>
@@ -402,24 +413,24 @@ function ChartBadge({ label, value }) {
 
 function ElectricityChart({ result, t }) {
   return (
-    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-blue-950">累積電費比較</h3>
-          <p className="text-xs text-slate-600">現有方案 vs QUICKET</p>
+          <h3 className="text-base font-bold text-blue-950">{t.electricityCompare}</h3>
+          <p className="text-xs text-slate-600">{t.elecSub}</p>
         </div>
         <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.totalElectricitySaved)} />
       </div>
-      <div className="h-44 sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={formatM} />
-            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip formatter={(value, name) => [formatNTD(value), name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="現有方案電費" name="現有方案電費" fill="#8a9bb0" radius={[7, 7, 0, 0]} />
-            <Bar dataKey="QUICKET電費" name="QUICKET 電費" fill="#2563eb" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="currentElectricity" name={t.chartNames.currentElectricity} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="quicketElectricity" name={t.chartNames.quicketElectricity} fill="#2563eb" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -429,24 +440,24 @@ function ElectricityChart({ result, t }) {
 
 function MaintenanceChart({ result, t }) {
   return (
-    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-blue-950">累積維護成本比較</h3>
-          <p className="text-xs text-slate-600">整燈更換 vs QUICKET 模組更換</p>
+          <h3 className="text-base font-bold text-blue-950">{t.maintenanceCompare}</h3>
+          <p className="text-xs text-slate-600">{t.maintSub}</p>
         </div>
         <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.maintenanceSaved)} />
       </div>
-      <div className="h-44 sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={formatM} />
-            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip formatter={(value, name) => [formatNTD(value), name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="現有方案維護" name="整燈更換維護成本" fill="#8a9bb0" radius={[7, 7, 0, 0]} />
-            <Bar dataKey="QUICKET維護" name="QUICKET 模組維護成本" fill="#2563eb" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="currentMaintenance" name={t.chartNames.currentMaintenance} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="quicketMaintenance" name={t.chartNames.quicketMaintenance} fill="#2563eb" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -456,24 +467,24 @@ function MaintenanceChart({ result, t }) {
 
 function CarbonMiniChart({ result, t }) {
   return (
-    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-bold text-blue-950">累積節能減碳比較</h3>
-          <p className="text-xs text-slate-600">用電量與碳排累積差異</p>
+          <h3 className="text-base font-bold text-blue-950">{t.carbonCompare}</h3>
+          <p className="text-xs text-slate-600">{t.carbonSub}</p>
         </div>
         <ChartBadge label={t.annualCarbon} value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
       </div>
-      <div className="h-44 sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={(value) => `${formatNumber(value / 1000, 0)}t`} />
-            <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} tCO₂e`} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip formatter={(value, name) => [`${formatNumber(value / 1000, 1)} tCO₂e`, name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="現有方案碳排" name="現有方案碳排" fill="#8a9bb0" radius={[7, 7, 0, 0]} />
-            <Bar dataKey="QUICKET碳排" name="QUICKET 碳排" fill="#2563eb" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="currentCarbon" name={t.chartNames.currentCarbon} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="quicketCarbon" name={t.chartNames.quicketCarbon} fill="#2563eb" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -553,12 +564,12 @@ export default function App() {
       const quicketMaintenanceEvents = Math.floor(year / quicketMaintenanceCycle)
       return {
         year: `Y${year}`,
-        現有方案電費: Math.round(currentAnnualElectricityCost * year),
-        QUICKET電費: Math.round(quicketAnnualElectricityCost * year),
-        現有方案維護: Math.round(quantity * currentMaintenanceCost * currentMaintenanceEvents),
-        QUICKET維護: Math.round(quantity * quicketMaintenanceCost * quicketMaintenanceEvents),
-        現有方案碳排: Math.round(currentAnnualCarbon * year),
-        QUICKET碳排: Math.round(quicketAnnualCarbon * year),
+        currentElectricity: Math.round(currentAnnualElectricityCost * year),
+        quicketElectricity: Math.round(quicketAnnualElectricityCost * year),
+        currentMaintenance: Math.round(quantity * currentMaintenanceCost * currentMaintenanceEvents),
+        quicketMaintenance: Math.round(quantity * quicketMaintenanceCost * quicketMaintenanceEvents),
+        currentCarbon: Math.round(currentAnnualCarbon * year),
+        quicketCarbon: Math.round(quicketAnnualCarbon * year),
       }
     })
 
@@ -583,8 +594,8 @@ export default function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-950">
-      <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-8">
+    <div className="min-h-screen overflow-x-hidden bg-slate-100 text-slate-950">
+      <div className="mx-auto max-w-[1600px] overflow-x-hidden px-4 py-4 lg:px-8">
         <header className="mb-4 rounded-[28px] border border-slate-300 bg-white px-6 py-4 shadow-md">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -594,11 +605,11 @@ export default function App() {
                 <p className="mt-2 max-w-3xl text-sm leading-5 text-slate-600">{t.reportSubtitle}</p>
               </div>
             </div>
-            <button type="button" onClick={() => setLocale(locale === 'zh' ? 'en' : 'zh')} className="self-start rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-blue-800 transition hover:border-blue-300 hover:bg-blue-50">EN</button>
+            <button type="button" onClick={() => setLocale(locale === 'zh' ? 'en' : 'zh')} className="self-start rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-blue-800 transition hover:border-blue-300 hover:bg-blue-50">{locale === 'zh' ? 'EN' : '中'}</button>
           </div>
         </header>
 
-        <main className="grid gap-5 lg:grid-cols-[270px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]">
+        <main className="grid min-w-0 gap-5 lg:grid-cols-[270px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]">
           <aside className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-md">
             <div className="mb-5 flex items-center gap-3">
               <div className="rounded-2xl bg-blue-50 p-2 text-blue-700"><Settings2 size={22} /></div>
@@ -638,15 +649,15 @@ export default function App() {
             <div className="space-y-4">
               <SelectField label={t.siteType} value={form.siteType} onChange={(value) => applyContextTemplate('siteType', value)} options={siteOptions} labels={t.siteLabels} />
               <SelectField label={t.luminaireType} value={form.luminaireType} onChange={(value) => applyContextTemplate('luminaireType', value)} options={luminaireOptions} labels={t.luminaireLabels} />
-              <NumberField label={t.quantity} suffix={t.units.pcs} value={form.quantity} customized={customizedSet.has('quantity')} onChange={(value) => set('quantity', value)} />
-              <NumberField label={t.years} suffix={t.units.years} value={form.years} customized={customizedSet.has('years')} onChange={(value) => set('years', value)} />
+              <NumberField label={t.quantity} suffix={t.units.pcs} value={form.quantity} customLabel={t.customTag} customized={customizedSet.has('quantity')} onChange={(value) => set('quantity', value)} />
+              <NumberField label={t.years} suffix={t.units.years} value={form.years} customLabel={t.customTag} customized={customizedSet.has('years')} onChange={(value) => set('years', value)} />
               <div className="grid grid-cols-2 gap-3">
-                <NumberField label={t.currentWatt} suffix={t.units.w} value={form.currentWatt} customized={customizedSet.has('currentWatt')} onChange={(value) => set('currentWatt', value)} />
-                <QuicketWattField luminaireType={form.luminaireType} value={form.quicketWatt} customized={customizedSet.has('quicketWatt')} onChange={(value) => set('quicketWatt', value)} label={t.quicketWatt} unit={t.units.w} />
+                <NumberField label={t.currentWatt} suffix={t.units.w} value={form.currentWatt} customLabel={t.customTag} customized={customizedSet.has('currentWatt')} onChange={(value) => set('currentWatt', value)} />
+                <QuicketWattField luminaireType={form.luminaireType} value={form.quicketWatt} customLabel={t.customTag} customized={customizedSet.has('quicketWatt')} onChange={(value) => set('quicketWatt', value)} label={t.quicketWatt} unit={t.units.w} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <NumberField label={t.dailyHours} suffix={t.units.hr} value={form.dailyHours} customized={customizedSet.has('dailyHours')} onChange={(value) => set('dailyHours', value)} />
-                <NumberField label={t.annualDays} suffix={t.units.day} value={form.annualDays} customized={customizedSet.has('annualDays')} onChange={(value) => set('annualDays', value)} />
+                <NumberField label={t.dailyHours} suffix={t.units.hr} value={form.dailyHours} customLabel={t.customTag} customized={customizedSet.has('dailyHours')} onChange={(value) => set('dailyHours', value)} />
+                <NumberField label={t.annualDays} suffix={t.units.day} value={form.annualDays} customLabel={t.customTag} customized={customizedSet.has('annualDays')} onChange={(value) => set('annualDays', value)} />
               </div>
 
               <div className="rounded-2xl border border-blue-200 bg-blue-50/40">
@@ -657,39 +668,39 @@ export default function App() {
                 {advancedOpen && (
                   <div className="space-y-5 border-t border-blue-200 px-4 py-4">
                     <div className="space-y-4">
-                      <NumberField label={t.electricityPrice} suffix={t.units.ntdPerKwh} value={form.electricityPrice} step={0.01} customized={customizedSet.has('electricityPrice')} onChange={(value) => set('electricityPrice', value)} />
-                      <NumberField label={t.carbonFactor} suffix={t.units.kgPerKwh} value={form.carbonFactor} step={0.001} customized={customizedSet.has('carbonFactor')} onChange={(value) => set('carbonFactor', value)} />
+                      <NumberField label={t.electricityPrice} suffix={t.units.ntdPerKwh} value={form.electricityPrice} step={0.01} customLabel={t.customTag} customized={customizedSet.has('electricityPrice')} onChange={(value) => set('electricityPrice', value)} />
+                      <NumberField label={t.carbonFactor} suffix={t.units.kgPerKwh} value={form.carbonFactor} step={0.001} customLabel={t.customTag} customized={customizedSet.has('carbonFactor')} onChange={(value) => set('carbonFactor', value)} />
                     </div>
 
                     <div className="rounded-2xl border border-slate-300 bg-white p-3">
                       <div className="mb-1 text-sm font-bold text-blue-950">{t.maintenanceBasis}</div>
                       <p className="mb-3 text-xs leading-5 text-slate-500">{t.maintenanceBasisNote}</p>
                       <div className="grid grid-cols-2 gap-3">
-                        <NumberField label={t.currentPlan} suffix={t.units.ntdPerTime} value={form.currentMaintenanceCost} customized={customizedSet.has('currentMaintenanceCost')} onChange={(value) => set('currentMaintenanceCost', value)} />
-                        <NumberField label={t.quicket} suffix={t.units.ntdPerTime} value={form.quicketMaintenanceCost} customized={customizedSet.has('quicketMaintenanceCost')} onChange={(value) => set('quicketMaintenanceCost', value)} />
+                        <NumberField label={t.currentPlan} suffix={t.units.ntdPerTime} value={form.currentMaintenanceCost} customLabel={t.customTag} customized={customizedSet.has('currentMaintenanceCost')} onChange={(value) => set('currentMaintenanceCost', value)} />
+                        <NumberField label={t.quicket} suffix={t.units.ntdPerTime} value={form.quicketMaintenanceCost} customLabel={t.customTag} customized={customizedSet.has('quicketMaintenanceCost')} onChange={(value) => set('quicketMaintenanceCost', value)} />
                       </div>
-                      <div className="mt-2 grid grid-cols-2 gap-3 text-[11px] leading-4 text-slate-500"><div>整燈拆換、重新安裝與相關施工成本。</div><div>模組更換、較少拆裝與較低施工干擾。</div></div>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-[11px] leading-4 text-slate-500"><div>{t.wholeReplacementNote}</div><div>{t.moduleReplacementNote}</div></div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-300 bg-white p-3">
                       <div className="mb-3 text-sm font-bold text-blue-950">{t.maintenanceCycle}</div>
                       <div className="grid grid-cols-2 gap-3">
-                        <NumberField label={t.currentPlan} suffix={t.units.years} value={form.currentMaintenanceCycle} customized={customizedSet.has('currentMaintenanceCycle')} onChange={(value) => set('currentMaintenanceCycle', value)} />
-                        <NumberField label={t.quicket} suffix={t.units.years} value={form.quicketMaintenanceCycle} customized={customizedSet.has('quicketMaintenanceCycle')} onChange={(value) => set('quicketMaintenanceCycle', value)} />
+                        <NumberField label={t.currentPlan} suffix={t.units.years} value={form.currentMaintenanceCycle} customLabel={t.customTag} customized={customizedSet.has('currentMaintenanceCycle')} onChange={(value) => set('currentMaintenanceCycle', value)} />
+                        <NumberField label={t.quicket} suffix={t.units.years} value={form.quicketMaintenanceCycle} customLabel={t.customTag} customized={customizedSet.has('quicketMaintenanceCycle')} onChange={(value) => set('quicketMaintenanceCycle', value)} />
                       </div>
                     </div>
 
-                    <NumberField label={t.carbonPrice} suffix={t.units.ntdPerTon} value={form.carbonPrice} customized={customizedSet.has('carbonPrice')} onChange={(value) => set('carbonPrice', value)} />
+                    <NumberField label={t.carbonPrice} suffix={t.units.ntdPerTon} value={form.carbonPrice} customLabel={t.customTag} customized={customizedSet.has('carbonPrice')} onChange={(value) => set('carbonPrice', value)} />
                   </div>
                 )}
               </div>
             </div>
           </aside>
 
-          <section className="space-y-5">
+          <section className="min-w-0 space-y-5">
             <div>
-              {activeKpi ? <KpiOverlay activeKpi={activeKpi} result={result} form={form} onClose={() => setActiveKpi(null)} /> : (
-                <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
+              {activeKpi ? <KpiOverlay activeKpi={activeKpi} result={result} form={form} t={t} onClose={() => setActiveKpi(null)} /> : (
+                <div className="flex w-full max-w-full min-w-0 gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
                   {kpis.map((kpi) => <div key={kpi.key} className="min-w-[210px] lg:min-w-0"><KpiCard kpi={kpi} active={false} onClick={() => setActiveKpi(kpi.key)} /></div>)}
                 </div>
               )}
@@ -701,7 +712,7 @@ export default function App() {
                 <h2 className="text-lg font-bold">{t.overallAnalysis}</h2>
               </div>
               <div className="p-4 lg:p-5">
-                <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
+                <div className="mb-4 flex max-w-full gap-2 overflow-x-auto md:hidden">
                   {[
                     ['electricity', t.electricityCompare],
                     ['maintenance', t.maintenanceCompare],
@@ -717,12 +728,12 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="md:hidden">
+                <div className="min-w-0 overflow-hidden md:hidden">
                   {mobileChart === 'electricity' && <ElectricityChart result={result} t={t} />}
                   {mobileChart === 'maintenance' && <MaintenanceChart result={result} t={t} />}
                   {mobileChart === 'carbon' && <CarbonMiniChart result={result} t={t} />}
                 </div>
-                <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
+                <div className="hidden min-w-0 gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
                   <ElectricityChart result={result} t={t} />
                   <MaintenanceChart result={result} t={t} />
                   <div className="md:col-span-2 xl:col-span-1">
@@ -732,17 +743,17 @@ export default function App() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-blue-200 bg-blue-50/60 p-5 shadow-sm">
-              <div className="flex gap-4">
+            <div className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-blue-200 bg-blue-50/60 p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-4 md:flex-row">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white"><Lightbulb size={28} /></div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 max-w-full flex-1">
                   <h3 className="text-xl font-bold text-blue-950">{t.insight}</h3>
-                  <div className="mt-2 space-y-2 text-base leading-8 text-slate-700">
+                  <div className="mt-2 max-w-full space-y-2 break-words text-sm leading-7 text-slate-700 sm:text-base sm:leading-8">
                     <p><span className="font-bold text-slate-900">{t.caseCond}</span>{t.insightLine1(projectLabel, formatNumber(form.quantity), form.years)}</p>
                     <p><span className="font-bold text-slate-900">{t.annualBenefit}</span>{t.insightLine2(formatNumber(result.annualKwhSaved), formatNTD(result.annualElectricitySaved))}</p>
                     <p><span className="font-bold text-slate-900">{t.longBenefit}</span>{t.insightLine3(form.years, compactNtd(result.maintenanceSaved), compactNtd(result.totalSaved))}</p>
                   </div>
-                  <div className="mt-3 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-800">
+                  <div className="mt-3 max-w-full break-words rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-800">
                     {t.totalBenefitLine(form.years, compactNtd(result.totalSaved))}
                   </div>
                 </div>
