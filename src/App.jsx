@@ -290,25 +290,14 @@ function KpiOverlay({ activeKpi, result, form, onClose }) {
   )
 }
 
-function MetricBlock({ icon: Icon, title, lines }) {
+function MetricBlock({ icon: Icon, title, children }) {
   return (
     <div className="rounded-3xl bg-white/75 p-4 shadow-sm ring-1 ring-blue-100">
       <div className="mb-3 flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-700"><Icon size={22} /></div>
         <div className="text-sm font-bold text-slate-900">{title}</div>
       </div>
-      <div className="space-y-1.5 text-xs leading-5 text-slate-600">
-        {lines.map((line) => <div key={line}>{line}</div>)}
-      </div>
-    </div>
-  )
-}
-
-function MiniStat({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 text-base font-bold text-blue-800">{value}</div>
+      <div className="text-xs leading-6 text-slate-600">{children}</div>
     </div>
   )
 }
@@ -320,7 +309,7 @@ function ElectricityChart({ result }) {
         <h3 className="text-lg font-bold text-blue-950">累積電費比較</h3>
         <p className="text-sm text-slate-500">現有方案 vs QUICKET</p>
       </div>
-      <div className="h-56 min-[1400px]:h-60">
+      <div className="h-48 min-[1400px]:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
@@ -348,7 +337,7 @@ function MaintenanceChart({ result }) {
         <h3 className="text-lg font-bold text-blue-950">累積維護成本比較</h3>
         <p className="text-sm text-slate-500">整燈更換 vs QUICKET 模組更換</p>
       </div>
-      <div className="h-56 min-[1400px]:h-60">
+      <div className="h-48 min-[1400px]:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
@@ -371,15 +360,27 @@ function MaintenanceChart({ result }) {
 
 function CarbonMiniChart({ result }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-2">
-        <h3 className="text-lg font-bold text-blue-950">節能減碳摘要</h3>
-        <p className="text-sm text-slate-500">由年度節電量換算減碳與碳效益</p>
+        <h3 className="text-lg font-bold text-blue-950">累積節能減碳比較</h3>
+        <p className="text-sm text-slate-500">用電量與碳排累積差異</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <MiniStat label="年度節電量" value={`${formatNumber(result.annualKwhSaved)} kWh`} />
-        <MiniStat label="年度減碳量" value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
-        <MiniStat label="估算碳效益" value={formatNTD(result.carbonValue)} />
+      <div className="h-48 min-[1400px]:h-52">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
+            <XAxis dataKey="year" stroke="#64748b" />
+            <YAxis stroke="#64748b" tickFormatter={(value) => `${formatNumber(value / 1000, 0)}t`} />
+            <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} tCO₂e`} contentStyle={{ background: '#ffffff', border: '1px solid #dbeafe', borderRadius: 12 }} />
+            <Legend />
+            <Area type="monotone" dataKey="現有方案碳排" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.12} strokeWidth={3} />
+            <Area type="monotone" dataKey="QUICKET碳排" name="QUICKET 碳排" stroke="#2563eb" fill="#2563eb" fillOpacity={0.1} strokeWidth={3} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="pointer-events-none absolute right-4 top-4 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
+        <div className="font-semibold text-slate-700">年度減碳量</div>
+        <div className="mt-0.5 text-base font-bold text-blue-700">{formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e</div>
       </div>
     </div>
   )
@@ -461,12 +462,14 @@ export default function App() {
     }
   }, [form])
 
+  const householdEquivalent = Math.max(1, Math.round(result.annualKwhSaved / 3720))
+
   const kpis = [
-    { key: 'total', icon: TrendingUp, title: `${form.years} 年總效益`, value: compactNtd(result.totalSaved), caption: '電費 + 維護 + 碳效益' },
-    { key: 'electricityCost', icon: Zap, title: '年度電費節約', value: formatNTD(result.annualElectricitySaved), caption: '每年節省電費' },
-    { key: 'maintenance', icon: Wrench, title: `${form.years} 年維護節約`, value: compactNtd(result.maintenanceSaved), caption: '降低維護成本' },
-    { key: 'energy', icon: Leaf, title: '年度節電量', value: `${formatNumber(result.annualKwhSaved)} kWh`, caption: '相當於 25 戶家庭用電' },
-    { key: 'carbon', icon: Cloud, title: '年度減碳量', value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: '減少碳排放' },
+    { key: 'total', icon: TrendingUp, title: `${form.years} 年總效益`, value: compactNtd(result.totalSaved), caption: '可支撐場域改善投入' },
+    { key: 'electricityCost', icon: Zap, title: '年度電費節約', value: formatNTD(result.annualElectricitySaved), caption: '可轉換為年度維保預算' },
+    { key: 'maintenance', icon: Wrench, title: `${form.years} 年維護節約`, value: compactNtd(result.maintenanceSaved), caption: '減少反覆整燈拆換支出' },
+    { key: 'energy', icon: Leaf, title: '年度節電量', value: `${formatNumber(result.annualKwhSaved)} kWh`, caption: `相當於 ${formatNumber(householdEquivalent)} 戶家庭用電` },
+    { key: 'carbon', icon: Cloud, title: '年度減碳量', value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: '可作為 ESG 量化成果參考' },
   ]
 
   return (
@@ -489,10 +492,6 @@ export default function App() {
               <div><h2 className="text-lg font-bold text-blue-950">快速估算條件</h2><p className="text-xs text-slate-500">Quick Estimate</p></div>
             </div>
 
-            <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs leading-5 text-slate-600">
-              <div className="font-bold text-blue-900">案例預設值，可依實際場域調整</div>
-              <div>選擇場域與燈具類型會自動帶入預設參數；標準燈具的 QUICKET 瓦數僅能選用定式規格，客製型才可自訂瓦數。</div>
-            </div>
 
             <div className="mb-4 flex flex-wrap gap-2">
               {Object.keys(scenarioPresets).map((name) => (
@@ -568,11 +567,9 @@ export default function App() {
                 <h2 className="text-lg font-bold">整體效益分析</h2>
               </div>
               <div className="p-4 lg:p-5">
-                <div className="grid gap-5 min-[900px]:grid-cols-2">
+                <div className="grid gap-4 min-[900px]:grid-cols-3">
                   <ElectricityChart result={result} />
                   <MaintenanceChart result={result} />
-                </div>
-                <div className="mt-5">
                   <CarbonMiniChart result={result} />
                 </div>
               </div>
@@ -583,18 +580,26 @@ export default function App() {
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white"><Lightbulb size={28} /></div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg font-bold text-blue-950">專案洞察</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-700">
-                    本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，每年可節電 {formatNumber(result.annualKwhSaved)} kWh、節省電費 {formatNTD(result.annualElectricitySaved)}，並形成 {compactNtd(result.maintenanceSaved)} 的維護節約。
-                  </p>
+                  <div className="mt-2 space-y-2 text-sm leading-7 text-slate-700">
+                    <p><span className="font-bold text-slate-900">本案例條件：</span>{formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}，評估期間 {form.years} 年。</p>
+                    <p><span className="font-bold text-slate-900">年度效益：</span>每年可節電 {formatNumber(result.annualKwhSaved)} kWh，並節省電費約 {formatNTD(result.annualElectricitySaved)}。</p>
+                    <p><span className="font-bold text-slate-900">長期效益：</span>{form.years} 年維護節約約 {compactNtd(result.maintenanceSaved)}，總效益約 {compactNtd(result.totalSaved)}。</p>
+                  </div>
                   <div className="mt-3 rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-blue-800">
                     {form.years} 年估算總效益：{compactNtd(result.totalSaved)}
                   </div>
                 </div>
               </div>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
-                <MetricBlock icon={DollarSign} title="營運成本" lines={[`年度電費節約：${formatNTD(result.annualElectricitySaved)}`, `${form.years} 年維護節約：${compactNtd(result.maintenanceSaved)}`]} />
-                <MetricBlock icon={Leaf} title="能源與永續" lines={[`年度節電：${formatNumber(result.annualKwhSaved)} kWh`, `年度減碳：${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`]} />
-                <MetricBlock icon={LineChart} title="長期效益" lines={[`評估期間：${form.years} 年`, `總效益：約 ${compactNtd(result.totalSaved)}`]} />
+                <MetricBlock icon={DollarSign} title="營運成本">
+                  年度節省可轉換為例行維保、備品採購或小型節能改善預算，讓照明更新不只是減少支出，也能釋放營運資源。
+                </MetricBlock>
+                <MetricBlock icon={Leaf} title="能源與永續">
+                  節電與減碳成果可作為 ESG、節能專案或內部永續報告的量化素材，讓照明改善成為可呈報的績效。
+                </MetricBlock>
+                <MetricBlock icon={LineChart} title="長期效益">
+                  效益會隨使用年限累積，對高使用時數、維護不易或停機成本較高的場域，長期差距比單次採購價格更重要。
+                </MetricBlock>
               </div>
             </div>
 
