@@ -57,6 +57,15 @@ const luminaireOptions = {
   'bay-light': '天井燈',
   'flood-light': '投射燈',
   'street-light': '路燈',
+  custom: '客製型（瓦數自訂）',
+}
+
+const quicketWattOptions = {
+  downlight: [10, 15, 20, 30],
+  cylinder: [30, 50, 75],
+  'bay-light': [50, 100, 150, 200],
+  'flood-light': [50, 100, 150, 200],
+  'street-light': [30, 50, 75, 100],
 }
 
 const siteDefaults = {
@@ -73,19 +82,22 @@ const luminaireDefaults = {
   'bay-light': { currentWatt: 200, quicketWatt: 150, currentMaintenanceCost: 6500, quicketMaintenanceCost: 2000, currentMaintenanceCycle: 3, quicketMaintenanceCycle: 3 },
   'flood-light': { currentWatt: 150, quicketWatt: 110, currentMaintenanceCost: 6200, quicketMaintenanceCost: 1900, currentMaintenanceCycle: 3, quicketMaintenanceCycle: 3 },
   'street-light': { currentWatt: 100, quicketWatt: 75, currentMaintenanceCost: 5800, quicketMaintenanceCost: 1800, currentMaintenanceCycle: 4, quicketMaintenanceCycle: 4 },
+  custom: { currentWatt: 100, quicketWatt: 75, currentMaintenanceCost: 5000, quicketMaintenanceCost: 1600, currentMaintenanceCycle: 4, quicketMaintenanceCycle: 4 },
 }
 
 function buildDefaultParams(siteType = 'factory', luminaireType = 'bay-light') {
   const site = siteDefaults[siteType] || siteDefaults.factory
   const luminaire = luminaireDefaults[luminaireType] || luminaireDefaults['bay-light']
   const maintenanceFactor = site.maintenanceFactor || 1
+  const standardWatts = quicketWattOptions[luminaireType]
+  const defaultQuicketWatt = standardWatts?.includes(luminaire.quicketWatt) ? luminaire.quicketWatt : (standardWatts?.[0] ?? luminaire.quicketWatt)
 
   return {
     siteType,
     luminaireType,
     quantity: site.quantity,
     currentWatt: luminaire.currentWatt,
-    quicketWatt: luminaire.quicketWatt,
+    quicketWatt: defaultQuicketWatt,
     dailyHours: site.dailyHours,
     annualDays: site.annualDays,
     electricityPrice: site.electricityPrice,
@@ -115,12 +127,12 @@ function getChangedFields(form) {
 function Field({ label, suffix, customized, children }) {
   return (
     <label className="block space-y-1.5">
-      <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500">
-        <span className="flex items-center gap-2">
-          {label}
+      <div className="flex min-h-[2.2rem] items-start justify-between gap-2 text-xs font-medium text-slate-500">
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5 leading-4">
+          <span className="break-keep leading-4">{label}</span>
           {customized && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">已自訂</span>}
         </span>
-        {suffix && <span>{suffix}</span>}
+        {suffix && <span className="shrink-0 whitespace-nowrap leading-4">{suffix}</span>}
       </div>
       {children}
     </label>
@@ -156,6 +168,40 @@ function SelectField({ label, value, onChange, options, customized = false }) {
         {Object.entries(options).map(([key, labelText]) => (
           <option key={key} value={key}>
             {labelText}
+          </option>
+        ))}
+      </select>
+    </Field>
+  )
+}
+
+
+function QuicketWattField({ luminaireType, value, onChange, customized = false }) {
+  const isCustom = luminaireType === 'custom'
+  const options = quicketWattOptions[luminaireType] || []
+
+  if (isCustom) {
+    return (
+      <NumberField
+        label="QUICKET 瓦數"
+        suffix="W"
+        value={value}
+        customized={customized}
+        onChange={onChange}
+      />
+    )
+  }
+
+  return (
+    <Field label="QUICKET 瓦數" suffix="W" customized={customized}>
+      <select
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-200'}`}
+      >
+        {options.map((watt) => (
+          <option key={watt} value={watt}>
+            {watt} W
           </option>
         ))}
       </select>
@@ -312,13 +358,13 @@ function TabButton({ active, icon: Icon, label, onClick }) {
 
 function MetricBlock({ icon: Icon, title, text }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-700">
         <Icon size={22} />
       </div>
-      <div>
-        <div className="text-sm font-semibold text-slate-800">{title}</div>
-        <div className="text-xs text-slate-500">{text}</div>
+      <div className="min-w-0 leading-5">
+        <div className="whitespace-nowrap text-sm font-semibold text-slate-800">{title}</div>
+        <div className="whitespace-nowrap text-xs text-slate-500">{text}</div>
       </div>
     </div>
   )
@@ -490,9 +536,9 @@ export default function App() {
       <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-8">
         <header className="mb-4 rounded-[28px] border border-slate-200 bg-white px-6 py-4 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-10 w-auto shrink-0 object-contain md:h-11" />
+            <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-9 w-auto shrink-0 object-contain md:h-10" />
             <div className="md:ml-5">
-              <h1 className="text-2xl font-bold tracking-[0.08em] text-blue-950 md:text-3xl">QUICKET 導入效益儀表板</h1>
+              <h1 className="text-2xl font-bold tracking-[0.06em] text-blue-950 md:text-[1.7rem]">QUICKET 導入效益報告</h1>
               <p className="mt-2 max-w-3xl text-sm leading-5 text-slate-600">快速比較現有照明方案與 QUICKET 導入後的節能、維護與長期成本效益。</p>
             </div>
           </div>
@@ -512,7 +558,7 @@ export default function App() {
 
             <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs leading-5 text-slate-600">
               <div className="font-bold text-blue-900">案例預設值，可依實際場域調整</div>
-              <div>選擇場域與燈具類型會自動帶入預設參數；手動修改後，欄位會標示為「已自訂」。</div>
+              <div>選擇場域與燈具類型會自動帶入預設參數；標準燈具的 QUICKET 瓦數僅能選用定式規格，客製型才可自訂瓦數。</div>
             </div>
 
             <div className="mb-4 flex flex-wrap gap-2">
@@ -544,7 +590,7 @@ export default function App() {
               <NumberField label="計算年限" suffix="年" value={form.years} customized={customizedSet.has('years')} onChange={(value) => set('years', value)} />
               <div className="grid grid-cols-2 gap-3">
                 <NumberField label="現有瓦數" suffix="W" value={form.currentWatt} customized={customizedSet.has('currentWatt')} onChange={(value) => set('currentWatt', value)} />
-                <NumberField label="QUICKET 瓦數" suffix="W" value={form.quicketWatt} customized={customizedSet.has('quicketWatt')} onChange={(value) => set('quicketWatt', value)} />
+                <QuicketWattField luminaireType={form.luminaireType} value={form.quicketWatt} customized={form.luminaireType === 'custom' && customizedSet.has('quicketWatt')} onChange={(value) => set('quicketWatt', value)} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <NumberField label="每日使用" suffix="小時" value={form.dailyHours} customized={customizedSet.has('dailyHours')} onChange={(value) => set('dailyHours', value)} />
