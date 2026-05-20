@@ -39,6 +39,14 @@ const compactNtd = (value) => {
 }
 const formatM = (value) => (Math.abs(value) >= 1_000_000 ? `${formatNumber(value / 1_000_000, 1)}M` : formatNumber(value))
 
+// 可後續依最新市場或正式報價替換的參考值
+const EU_EUA_NTD_PER_TON = 2600
+const TAIWAN_CARBON_FEE_NTD_PER_TON = 300
+const EST_RECYCLED_MATERIAL_VALUE_PER_SET = 900
+const EST_LABOR_DAY_COST = 3000
+const TREE_ABSORPTION_KG_PER_YEAR = 22
+
+
 const siteOptions = {
   factory: '工廠',
   warehouse: '倉儲',
@@ -123,12 +131,10 @@ function getChangedFields(form) {
 function Field({ label, suffix, customized, children }) {
   return (
     <label className="block space-y-1.5">
-      <div className="flex min-h-[2rem] items-start justify-between gap-2 text-xs font-medium text-slate-500">
-        <span className="flex min-w-0 flex-wrap items-center gap-1.5 leading-4">
-          <span className="break-keep leading-4">{label}</span>
-          {customized && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">已自訂</span>}
-        </span>
-        {suffix && <span className="shrink-0 whitespace-nowrap leading-4">{suffix}</span>}
+      <div className="flex min-h-[1.55rem] flex-wrap items-center gap-1.5 text-xs font-medium text-slate-500">
+        <span className="break-keep leading-4">{label}</span>
+        {suffix && <span className="whitespace-nowrap leading-4 text-slate-500">{suffix}</span>}
+        {customized && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">已自訂</span>}
       </div>
       {children}
     </label>
@@ -147,7 +153,7 @@ function NumberField({ label, suffix, value, onChange, min = 0, step = 1, custom
           const nextValue = event.target.value
           onChange(nextValue === '' ? '' : Number(nextValue))
         }}
-        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-200'}`}
+        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-300'}`}
       />
     </Field>
   )
@@ -159,7 +165,7 @@ function SelectField({ label, value, onChange, options, customized = false }) {
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-200'}`}
+        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-300'}`}
       >
         {Object.entries(options).map(([key, labelText]) => (
           <option key={key} value={key}>{labelText}</option>
@@ -179,7 +185,7 @@ function QuicketWattField({ luminaireType, value, onChange, customized = false }
       <select
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-200'}`}
+        className={`w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50 ${customized ? 'border-amber-200' : 'border-slate-300'}`}
       >
         {options.map((watt) => <option key={watt} value={watt}>{watt} W</option>)}
       </select>
@@ -193,7 +199,7 @@ function KpiCard({ kpi, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`group relative min-h-[142px] rounded-3xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${active ? 'border-blue-500 shadow-lg shadow-blue-100/70' : 'border-slate-200'}`}
+      className={`group relative min-h-[142px] rounded-3xl border bg-white p-4 shadow-md text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${active ? 'border-blue-600 shadow-lg shadow-blue-100/70' : 'border-slate-300'}`}
     >
       {active && <div className="absolute inset-x-8 top-0 h-1 rounded-b-full bg-blue-600" />}
       <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full transition ${active ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-blue-700 group-hover:bg-blue-50'}`}>
@@ -274,12 +280,12 @@ function KpiOverlay({ activeKpi, result, form, onClose }) {
             <p className="mt-1 text-sm leading-6 text-slate-500">本指標依左側估算條件與進階參數自動計算；使用者可調整參數以反映實際場域條件。</p>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" aria-label="關閉 KPI 說明"><X size={18} /></button>
+        <button type="button" onClick={onClose} className="rounded-full border border-slate-300 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" aria-label="關閉 KPI 說明"><X size={18} /></button>
       </div>
       <div className="grid gap-4 min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3><p className="text-sm leading-7 text-slate-600">{data.description}</p></div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3><p className="text-sm leading-7 text-slate-700">{data.formula}</p></div>
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">指標說明</h3><p className="text-sm leading-7 text-slate-600">{data.description}</p></div>
+        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">計算公式</h3><p className="text-sm leading-7 text-slate-700">{data.formula}</p></div>
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4">
           <h3 className="mb-2 text-sm font-bold text-blue-950">本案例代入</h3>
           <div className="space-y-2 text-sm leading-6 text-slate-700">
             {data.lines.map((line, index) => <div key={line} className={index === data.lines.length - 1 ? 'font-bold text-blue-700' : ''}>{line}</div>)}
@@ -302,29 +308,37 @@ function MetricBlock({ icon: Icon, title, children }) {
   )
 }
 
+function ChartBadge({ label, value }) {
+  return (
+    <div className="shrink-0 rounded-2xl border border-blue-200 bg-white px-3 py-2 text-right shadow-sm">
+      <div className="text-[11px] font-semibold text-slate-600">{label}</div>
+      <div className="text-sm font-bold text-blue-700">{value}</div>
+    </div>
+  )
+}
+
 function ElectricityChart({ result }) {
   return (
-    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-2">
-        <h3 className="text-lg font-bold text-blue-950">累積電費比較</h3>
-        <p className="text-sm text-slate-500">現有方案 vs QUICKET</p>
+    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-bold text-blue-950">累積電費比較</h3>
+          <p className="text-xs text-slate-600">現有方案 vs QUICKET</p>
+        </div>
+        <ChartBadge label={`${result.years} 年差額`} value={compactNtd(result.totalElectricitySaved)} />
       </div>
-      <div className="h-48 min-[1400px]:h-52">
+      <div className="h-44 min-[1400px]:h-48">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
-            <XAxis dataKey="year" stroke="#64748b" />
-            <YAxis stroke="#64748b" tickFormatter={formatM} />
-            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #dbeafe', borderRadius: 12 }} />
-            <Legend />
-            <Area type="monotone" dataKey="現有方案電費" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.12} strokeWidth={3} />
-            <Area type="monotone" dataKey="QUICKET電費" name="QUICKET 電費" stroke="#2563eb" fill="#2563eb" fillOpacity={0.1} strokeWidth={3} />
+          <AreaChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
+            <XAxis dataKey="year" stroke="#475569" />
+            <YAxis stroke="#475569" tickFormatter={formatM} />
+            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Area type="monotone" dataKey="現有方案電費" stroke="#8a9bb0" fill="#8a9bb0" fillOpacity={0.12} strokeWidth={3} />
+            <Area type="monotone" dataKey="QUICKET電費" name="QUICKET 電費" stroke="#2563eb" fill="#2563eb" fillOpacity={0.12} strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
-      <div className="pointer-events-none absolute right-4 top-4 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
-        <div className="font-semibold text-slate-700">{result.years} 年累積電費差額</div>
-        <div className="mt-0.5 text-base font-bold text-blue-700">{compactNtd(result.totalElectricitySaved)}</div>
       </div>
     </div>
   )
@@ -332,27 +346,26 @@ function ElectricityChart({ result }) {
 
 function MaintenanceChart({ result }) {
   return (
-    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-2">
-        <h3 className="text-lg font-bold text-blue-950">累積維護成本比較</h3>
-        <p className="text-sm text-slate-500">整燈更換 vs QUICKET 模組更換</p>
+    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-bold text-blue-950">累積維護成本比較</h3>
+          <p className="text-xs text-slate-600">整燈更換 vs QUICKET 模組更換</p>
+        </div>
+        <ChartBadge label={`${result.years} 年差額`} value={compactNtd(result.maintenanceSaved)} />
       </div>
-      <div className="h-48 min-[1400px]:h-52">
+      <div className="h-44 min-[1400px]:h-48">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
-            <XAxis dataKey="year" stroke="#64748b" />
-            <YAxis stroke="#64748b" tickFormatter={formatM} />
-            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #dbeafe', borderRadius: 12 }} />
-            <Legend />
-            <Bar dataKey="現有方案維護" name="整燈更換維護成本" fill="#94a3b8" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="QUICKET維護" name="QUICKET 模組維護成本" fill="#2563eb" radius={[8, 8, 0, 0]} />
+          <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
+            <XAxis dataKey="year" stroke="#475569" />
+            <YAxis stroke="#475569" tickFormatter={formatM} />
+            <Tooltip formatter={(value) => formatNTD(value)} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar dataKey="現有方案維護" name="整燈更換維護成本" fill="#8a9bb0" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="QUICKET維護" name="QUICKET 模組維護成本" fill="#2563eb" radius={[7, 7, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-      <div className="pointer-events-none absolute right-4 top-4 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
-        <div className="font-semibold text-slate-700">{result.years} 年維護差額</div>
-        <div className="mt-0.5 text-base font-bold text-blue-700">{compactNtd(result.maintenanceSaved)}</div>
       </div>
     </div>
   )
@@ -360,27 +373,26 @@ function MaintenanceChart({ result }) {
 
 function CarbonMiniChart({ result }) {
   return (
-    <div className="relative rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-2">
-        <h3 className="text-lg font-bold text-blue-950">累積節能減碳比較</h3>
-        <p className="text-sm text-slate-500">用電量與碳排累積差異</p>
+    <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-bold text-blue-950">累積節能減碳比較</h3>
+          <p className="text-xs text-slate-600">用電量與碳排累積差異</p>
+        </div>
+        <ChartBadge label="年度減碳" value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
       </div>
-      <div className="h-48 min-[1400px]:h-52">
+      <div className="h-44 min-[1400px]:h-48">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={result.yearlyRows} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e6edf2" />
-            <XAxis dataKey="year" stroke="#64748b" />
-            <YAxis stroke="#64748b" tickFormatter={(value) => `${formatNumber(value / 1000, 0)}t`} />
-            <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} tCO₂e`} contentStyle={{ background: '#ffffff', border: '1px solid #dbeafe', borderRadius: 12 }} />
-            <Legend />
-            <Area type="monotone" dataKey="現有方案碳排" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.12} strokeWidth={3} />
-            <Area type="monotone" dataKey="QUICKET碳排" name="QUICKET 碳排" stroke="#2563eb" fill="#2563eb" fillOpacity={0.1} strokeWidth={3} />
+          <AreaChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
+            <XAxis dataKey="year" stroke="#475569" />
+            <YAxis stroke="#475569" tickFormatter={(value) => `${formatNumber(value / 1000, 0)}t`} />
+            <Tooltip formatter={(value) => `${formatNumber(value / 1000, 1)} tCO₂e`} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Area type="monotone" dataKey="現有方案碳排" stroke="#8a9bb0" fill="#8a9bb0" fillOpacity={0.12} strokeWidth={3} />
+            <Area type="monotone" dataKey="QUICKET碳排" name="QUICKET 碳排" stroke="#2563eb" fill="#2563eb" fillOpacity={0.12} strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
-      <div className="pointer-events-none absolute right-4 top-4 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
-        <div className="font-semibold text-slate-700">年度減碳量</div>
-        <div className="mt-0.5 text-base font-bold text-blue-700">{formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e</div>
       </div>
     </div>
   )
@@ -390,6 +402,8 @@ export default function App() {
   const [form, setForm] = useState(scenarioPresets['工業天井燈'])
   const [activeKpi, setActiveKpi] = useState(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [customSceneOpen, setCustomSceneOpen] = useState(false)
+  const [projectName, setProjectName] = useState('')
 
   const defaultForCurrentContext = useMemo(() => buildDefaultParams(form.siteType, form.luminaireType), [form.siteType, form.luminaireType])
   const changedFields = useMemo(() => getChangedFields(form), [form])
@@ -397,7 +411,7 @@ export default function App() {
   const hasCustomFields = changedFields.length > 0
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
-  const applyScenario = (name) => { setForm(scenarioPresets[name]); setActiveKpi(null) }
+  const applyScenario = (name) => { setForm(scenarioPresets[name]); setActiveKpi(null); setCustomSceneOpen(false); setProjectName('') }
   const applyContextTemplate = (key, value) => {
     const nextSiteType = key === 'siteType' ? value : form.siteType
     const nextLuminaireType = key === 'luminaireType' ? value : form.luminaireType
@@ -439,6 +453,13 @@ export default function App() {
     const totalCarbonSaved = annualCarbonSaved * years
     const carbonValue = (totalCarbonSaved / 1000) * carbonPrice
     const totalSaved = totalElectricitySaved + maintenanceSaved + carbonValue
+    const maintenanceReplacementEquivalent = Math.max(0, Math.round(maintenanceSaved / Math.max(currentMaintenanceCost, 1)))
+    const annualModuleEquivalent = Math.max(0, Math.round(annualElectricitySaved / Math.max(quicketMaintenanceCost, 1)))
+    const totalReplacementEquivalent = Math.max(0, Math.round(totalSaved / Math.max(currentMaintenanceCost, 1)))
+    const estimatedLaborDays = Math.max(0, Math.round(maintenanceSaved / EST_LABOR_DAY_COST))
+    const euCarbonValue = (totalCarbonSaved / 1000) * EU_EUA_NTD_PER_TON
+    const taiwanCarbonValue = (totalCarbonSaved / 1000) * TAIWAN_CARBON_FEE_NTD_PER_TON
+    const recycledMaterialValue = quantity * quicketMaintenanceCount * EST_RECYCLED_MATERIAL_VALUE_PER_SET
 
     const yearlyRows = Array.from({ length: years + 1 }, (_, index) => {
       const year = index
@@ -459,23 +480,26 @@ export default function App() {
       years, currentAnnualKwh, quicketAnnualKwh, annualKwhSaved, annualElectricitySaved, annualCarbonSaved,
       currentMaintenanceCount, quicketMaintenanceCount, currentMaintenanceTotal, quicketMaintenanceTotal,
       maintenanceSaved, totalElectricitySaved, totalCarbonSaved, carbonValue, totalSaved, yearlyRows,
+      maintenanceReplacementEquivalent, annualModuleEquivalent, totalReplacementEquivalent, estimatedLaborDays, euCarbonValue, taiwanCarbonValue, recycledMaterialValue,
     }
   }, [form])
 
   const householdEquivalent = Math.max(1, Math.round(result.annualKwhSaved / 3720))
+  const treeEquivalent = Math.max(1, Math.round(result.annualCarbonSaved / TREE_ABSORPTION_KG_PER_YEAR))
+  const projectLabel = projectName.trim() || `${siteOptions[form.siteType]}${luminaireOptions[form.luminaireType]}`
 
   const kpis = [
-    { key: 'total', icon: TrendingUp, title: `${form.years} 年總效益`, value: compactNtd(result.totalSaved), caption: '可支撐場域改善投入' },
-    { key: 'electricityCost', icon: Zap, title: '年度電費節約', value: formatNTD(result.annualElectricitySaved), caption: '可轉換為年度維保預算' },
-    { key: 'maintenance', icon: Wrench, title: `${form.years} 年維護節約`, value: compactNtd(result.maintenanceSaved), caption: '減少反覆整燈拆換支出' },
+    { key: 'total', icon: TrendingUp, title: `${form.years} 年總效益`, value: compactNtd(result.totalSaved), caption: `約可抵 ${formatNumber(result.totalReplacementEquivalent)} 盞整燈更換` },
+    { key: 'electricityCost', icon: Zap, title: '年度電費節約', value: formatNTD(result.annualElectricitySaved), caption: `約可支應 ${formatNumber(result.annualModuleEquivalent)} 盞模組維護` },
+    { key: 'maintenance', icon: Wrench, title: `${form.years} 年維護節約`, value: compactNtd(result.maintenanceSaved), caption: `約可抵 ${formatNumber(result.maintenanceReplacementEquivalent)} 盞整燈更換` },
     { key: 'energy', icon: Leaf, title: '年度節電量', value: `${formatNumber(result.annualKwhSaved)} kWh`, caption: `相當於 ${formatNumber(householdEquivalent)} 戶家庭用電` },
-    { key: 'carbon', icon: Cloud, title: '年度減碳量', value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: '可作為 ESG 量化成果參考' },
+    { key: 'carbon', icon: Cloud, title: '年度減碳量', value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: `約等於 ${formatNumber(treeEquivalent)} 棵樹年吸碳` },
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-100 text-slate-950">
       <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-8">
-        <header className="mb-4 rounded-[28px] border border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <header className="mb-4 rounded-[28px] border border-slate-300 bg-white px-6 py-4 shadow-md">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <img src="/assets/quicket-logo.png" alt="QUICKET" className="h-9 w-auto shrink-0 object-contain md:h-10" />
             <div className="md:ml-5">
@@ -486,7 +510,7 @@ export default function App() {
         </header>
 
         <main className="grid gap-5 min-[900px]:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+          <aside className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-md">
             <div className="mb-5 flex items-center gap-3">
               <div className="rounded-2xl bg-blue-50 p-2 text-blue-700"><Settings2 size={22} /></div>
               <div><h2 className="text-lg font-bold text-blue-950">快速估算條件</h2><p className="text-xs text-slate-500">Quick Estimate</p></div>
@@ -495,9 +519,30 @@ export default function App() {
 
             <div className="mb-4 flex flex-wrap gap-2">
               {Object.keys(scenarioPresets).map((name) => (
-                <button key={name} onClick={() => applyScenario(name)} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">{name}</button>
+                <button key={name} onClick={() => applyScenario(name)} className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">{name}</button>
               ))}
+              <button
+                type="button"
+                onClick={() => setCustomSceneOpen(true)}
+                className={`rounded-full border px-3 py-1 text-xs font-bold transition ${customSceneOpen ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700'}`}
+              >
+                自訂義場景
+              </button>
             </div>
+
+            {customSceneOpen && (
+              <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50/50 p-3">
+                <Field label="場景名稱">
+                  <input
+                    type="text"
+                    value={projectName}
+                    onChange={(event) => setProjectName(event.target.value)}
+                    placeholder="例如：A 廠 3F 倉儲區"
+                    className="w-full rounded-xl border border-blue-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  />
+                </Field>
+              </div>
+            )}
 
             {hasCustomFields && <button type="button" onClick={resetToContextDefault} className="mb-4 w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-700 transition hover:bg-amber-100">目前有 {changedFields.length} 項自訂參數，點此恢復此場域預設值</button>}
 
@@ -515,19 +560,19 @@ export default function App() {
                 <NumberField label="每年使用" suffix="天" value={form.annualDays} customized={customizedSet.has('annualDays')} onChange={(value) => set('annualDays', value)} />
               </div>
 
-              <div className="rounded-2xl border border-blue-100 bg-blue-50/40">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/40">
                 <button type="button" onClick={() => setAdvancedOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
                   <div className="flex items-center gap-3"><div className="rounded-xl bg-white p-2 text-blue-700 shadow-sm"><Calculator size={18} /></div><div><div className="text-sm font-bold text-blue-950">進階參數</div><div className="text-xs text-slate-500">查看與調整更多假設條件</div></div></div>
                   {advancedOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
                 {advancedOpen && (
-                  <div className="space-y-5 border-t border-blue-100 px-4 py-4">
+                  <div className="space-y-5 border-t border-blue-200 px-4 py-4">
                     <div className="space-y-4">
                       <NumberField label="電價" suffix="NTD/kWh" value={form.electricityPrice} step={0.01} customized={customizedSet.has('electricityPrice')} onChange={(value) => set('electricityPrice', value)} />
                       <NumberField label="碳排係數" suffix="kg/kWh" value={form.carbonFactor} step={0.001} customized={customizedSet.has('carbonFactor')} onChange={(value) => set('carbonFactor', value)} />
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                    <div className="rounded-2xl border border-slate-300 bg-white p-3">
                       <div className="mb-1 text-sm font-bold text-blue-950">維護成本基準</div>
                       <p className="mb-3 text-xs leading-5 text-slate-500">以「整燈更換」與「模組更換」作為比較基準，可依實際安裝高度、施工難度、工資、設備租用與停機需求調整。</p>
                       <div className="grid grid-cols-2 gap-3">
@@ -537,7 +582,7 @@ export default function App() {
                       <div className="mt-2 grid grid-cols-2 gap-3 text-[11px] leading-4 text-slate-500"><div>整燈拆換、重新安裝與相關施工成本。</div><div>模組更換、較少拆裝與較低施工干擾。</div></div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                    <div className="rounded-2xl border border-slate-300 bg-white p-3">
                       <div className="mb-3 text-sm font-bold text-blue-950">維護週期</div>
                       <div className="grid grid-cols-2 gap-3">
                         <NumberField label="現有方案" suffix="年" value={form.currentMaintenanceCycle} customized={customizedSet.has('currentMaintenanceCycle')} onChange={(value) => set('currentMaintenanceCycle', value)} />
@@ -561,8 +606,8 @@ export default function App() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-              <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4 text-blue-800">
+            <div className="overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-md">
+              <div className="flex items-center gap-2 border-b border-slate-300 px-5 py-4 text-blue-800">
                 <Grid size={18} />
                 <h2 className="text-lg font-bold">整體效益分析</h2>
               </div>
@@ -575,35 +620,35 @@ export default function App() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-blue-100 bg-blue-50/60 p-5 shadow-sm">
+            <div className="rounded-[28px] border border-blue-200 bg-blue-50/60 p-5 shadow-sm">
               <div className="flex gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white"><Lightbulb size={28} /></div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg font-bold text-blue-950">專案洞察</h3>
                   <div className="mt-2 space-y-2 text-sm leading-7 text-slate-700">
-                    <p><span className="font-bold text-slate-900">本案例條件：</span>{formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}，評估期間 {form.years} 年。</p>
+                    <p><span className="font-bold text-slate-900">本案例條件：</span>{projectLabel}，共 {formatNumber(form.quantity)} 盞，評估期間 {form.years} 年。</p>
                     <p><span className="font-bold text-slate-900">年度效益：</span>每年可節電 {formatNumber(result.annualKwhSaved)} kWh，並節省電費約 {formatNTD(result.annualElectricitySaved)}。</p>
                     <p><span className="font-bold text-slate-900">長期效益：</span>{form.years} 年維護節約約 {compactNtd(result.maintenanceSaved)}，總效益約 {compactNtd(result.totalSaved)}。</p>
                   </div>
-                  <div className="mt-3 rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-blue-800">
+                  <div className="mt-3 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm font-bold text-blue-800">
                     {form.years} 年估算總效益：{compactNtd(result.totalSaved)}
                   </div>
                 </div>
               </div>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
-                <MetricBlock icon={DollarSign} title="營運成本">
-                  年度節省可轉換為例行維保、備品採購或小型節能改善預算，讓照明更新不只是減少支出，也能釋放營運資源。
+                <MetricBlock icon={DollarSign} title="成本節約">
+                  可抵約 {formatNumber(result.maintenanceReplacementEquivalent)} 盞整燈更換，亦相當於約 {formatNumber(result.estimatedLaborDays)} 個人日施工預算。
                 </MetricBlock>
-                <MetricBlock icon={Leaf} title="能源與永續">
-                  節電與減碳成果可作為 ESG、節能專案或內部永續報告的量化素材，讓照明改善成為可呈報的績效。
+                <MetricBlock icon={Leaf} title="碳排價值">
+                  以歐洲 EUA 參考約 {formatNTD(result.euCarbonValue)}；以台灣碳費約 {formatNTD(result.taiwanCarbonValue)}。
                 </MetricBlock>
-                <MetricBlock icon={LineChart} title="長期效益">
-                  效益會隨使用年限累積，對高使用時數、維護不易或停機成本較高的場域，長期差距比單次採購價格更重要。
+                <MetricBlock icon={LineChart} title="永續回收">
+                  歷次模組與電源更換物料暫估回收價值約 {formatNTD(result.recycledMaterialValue)}，待正式單價更新。
                 </MetricBlock>
               </div>
             </div>
 
-            <p className="pb-3 text-xs leading-5 text-slate-500">註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。維護成本以整燈更換與模組更換為比較基準，實際費用仍可能受安裝高度、施工難度、工資、設備租用與停機需求影響。</p>
+            <p className="pb-3 text-xs leading-5 text-slate-500">註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。維護成本以整燈更換與模組更換為比較基準，實際費用仍可能受安裝高度、施工難度、工資、設備租用與停機需求影響。碳排價值中的 EU / 台灣價格為暫用參考值，可依正式價格更新。</p>
           </section>
         </main>
       </div>
