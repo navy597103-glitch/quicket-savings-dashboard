@@ -56,8 +56,9 @@ const formatKpiCount = (value, locale = 'zh') => {
 // 可後續依最新市場或正式報價替換的參考值
 const EU_EUA_NTD_PER_TON = 2600
 const TAIWAN_CARBON_FEE_NTD_PER_TON = 300
-const EST_RECYCLED_MATERIAL_VALUE_PER_SET = 900
-const EST_LABOR_DAY_COST = 3000
+const EST_RECYCLED_MATERIAL_VALUE_PER_SET = 50
+const TRADITIONAL_REPLACEMENT_MINUTES = 17.5
+const QUICKET_MODULE_REPLACEMENT_MINUTES = 1
 const TREE_ABSORPTION_KG_PER_YEAR = 22
 
 
@@ -93,11 +94,12 @@ const translations = {
     insightLine1: (label,q,y)=> `${label}，共 ${q} 盞，評估期間 ${y} 年。`,
     insightLine2: (kwh,ntd)=> `每年可節電 ${kwh} kWh，並節省電費約 ${ntd}。`,
     insightLine3: (y,ms,ts)=> `${y} 年維護節約約 ${ms}，總效益約 ${ts}。`,
-    costComment:(repl,days)=> `可抵約 ${repl} 盞整燈更換，亦相當於約 ${days} 個人日施工預算。`,
+    costComment:(repl,hours)=> `可抵約 ${repl} 盞整燈更換，
+相當於專業電工 ${hours} 小時實作時數。`,
     carbonCommentHeader:'以現行參考價格估算：',
     carbonCommentEU:(v)=> `歐洲 EUA：約 ${v}`,
     carbonCommentTW:(v)=> `台灣碳費：約 ${v}`,
-    recycleComment:(v)=> `歷次模組與電源更換物料暫估回收價值約 ${v}。`,
+    recycleComment:(v)=> (<>歷次更換模組物料可由原廠回購<br />回購總價值約 {v}</>),
     customTag: '已自訂',
     wholeReplacementNote: '整燈拆換、重新安裝與相關施工成本。',
     moduleReplacementNote: '模組更換、較少拆裝與較低施工干擾。',
@@ -160,11 +162,12 @@ const translations = {
     insightLine1: (label,q,y)=> `${label}, ${q} fixtures in scope, evaluated over ${y} years.`,
     insightLine2: (kwh,ntd)=> `Estimated annual saving of ${kwh} kWh and ${ntd} in electricity cost.`,
     insightLine3: (y,ms,ts)=> `Estimated ${y}-year maintenance saving of ${ms}, with total benefit around ${ts}.`,
-    costComment:(repl,days)=> `Equivalent to about ${repl} full luminaire replacements, or roughly ${days} labor-days of field work.`,
+    costComment:(repl,hours)=> `Equivalent to about ${repl} full luminaire replacements.
+About ${hours} electrician work-hours avoided.`,
     carbonCommentHeader:'Estimated using current reference prices:',
     carbonCommentEU:(v)=> `EU EUA: ${v}`,
     carbonCommentTW:(v)=> `Taiwan carbon fee: ${v}`,
-    recycleComment:(v)=> `Estimated recovery value from replaced modules and drivers: ${v}.`,
+    recycleComment:(v)=> (<>Replaced modules can be bought back by QUICKET<br />Estimated buyback value: {v}</>),
     customTag: 'Customized',
     wholeReplacementNote: 'Whole luminaire removal, re-installation, and related field work.',
     moduleReplacementNote: 'Module replacement with less disassembly and lower field disruption.',
@@ -393,7 +396,7 @@ function KpiOverlay({ activeKpi, result, form, onClose, t }) {
         <button type="button" onClick={onClose} className="rounded-full border border-slate-300 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" aria-label={t.kpiExplain.close}><X size={18} /></button>
       </div>
       <div className="grid gap-4 min-[900px]:grid-cols-[1fr_1fr_1.7fr]">
-        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionDesc}</h3><p className="text-sm leading-7 text-slate-600">{data.description}</p></div>
+        <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionDesc}</h3><p className="whitespace-pre-line text-sm leading-7 text-slate-600">{data.description}</p></div>
         <div className="rounded-2xl border border-slate-300 bg-white p-4"><h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionFormula}</h3><p className="text-sm leading-7 text-slate-700">{data.formula}</p></div>
         <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4">
           <h3 className="mb-2 text-sm font-bold text-blue-950">{t.kpiExplain.sectionCase}</h3>
@@ -569,7 +572,8 @@ export default function App() {
     const maintenanceReplacementEquivalent = Math.max(0, Math.round(maintenanceSaved / Math.max(currentMaintenanceCost, 1)))
     const annualModuleEquivalent = Math.max(0, Math.round(annualElectricitySaved / Math.max(quicketMaintenanceCost, 1)))
     const totalReplacementEquivalent = Math.max(0, Math.round(totalSaved / Math.max(currentMaintenanceCost, 1)))
-    const estimatedLaborDays = Math.max(0, Math.round(maintenanceSaved / EST_LABOR_DAY_COST))
+    const savedMinutesPerUnit = Math.max(0, TRADITIONAL_REPLACEMENT_MINUTES - QUICKET_MODULE_REPLACEMENT_MINUTES)
+    const estimatedLaborHours = Math.max(0, Math.round((quantity * currentMaintenanceCount * savedMinutesPerUnit) / 60))
     const euCarbonValue = (totalCarbonSaved / 1000) * EU_EUA_NTD_PER_TON
     const taiwanCarbonValue = (totalCarbonSaved / 1000) * TAIWAN_CARBON_FEE_NTD_PER_TON
     const recycledMaterialValue = quantity * quicketMaintenanceCount * EST_RECYCLED_MATERIAL_VALUE_PER_SET
@@ -593,7 +597,7 @@ export default function App() {
       years, currentAnnualKwh, quicketAnnualKwh, annualKwhSaved, annualElectricitySaved, annualCarbonSaved,
       currentMaintenanceCount, quicketMaintenanceCount, currentMaintenanceTotal, quicketMaintenanceTotal,
       maintenanceSaved, totalElectricitySaved, totalCarbonSaved, carbonValue, totalSaved, yearlyRows,
-      maintenanceReplacementEquivalent, annualModuleEquivalent, totalReplacementEquivalent, estimatedLaborDays, euCarbonValue, taiwanCarbonValue, recycledMaterialValue,
+      maintenanceReplacementEquivalent, annualModuleEquivalent, totalReplacementEquivalent, estimatedLaborHours, euCarbonValue, taiwanCarbonValue, recycledMaterialValue,
     }
   }, [form])
 
@@ -776,7 +780,7 @@ export default function App() {
               </div>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 <MetricBlock icon={DollarSign} title={t.costSaving}>
-                  {t.costComment(formatNumber(result.maintenanceReplacementEquivalent), formatNumber(result.estimatedLaborDays))}
+                  {t.costComment(formatNumber(result.maintenanceReplacementEquivalent), formatNumber(result.estimatedLaborHours))}
                 </MetricBlock>
                 <MetricBlock icon={Leaf} title={t.carbonValue}>
                   <div><div>{t.carbonCommentHeader}</div><div className="mt-1">{t.carbonCommentEU(formatNTD(result.euCarbonValue))}</div><div>{t.carbonCommentTW(formatNTD(result.taiwanCarbonValue))}</div></div>
