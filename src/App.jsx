@@ -172,6 +172,32 @@ const luminaireDefaults = {
   custom: { currentWatt: 100, quicketWatt: 75, currentMaintenanceCost: 5000, quicketMaintenanceCost: 1600, currentMaintenanceCycle: 4, quicketMaintenanceCycle: 4 },
 }
 
+function buildDefaultParams(siteType = 'factory', luminaireType = 'bay-light') {
+  const site = siteDefaults[siteType] || siteDefaults.factory
+  const luminaire = luminaireDefaults[luminaireType] || luminaireDefaults['bay-light']
+  const standardWatts = quicketWattOptions[luminaireType]
+  const defaultQuicketWatt = standardWatts?.includes(luminaire.quicketWatt) ? luminaire.quicketWatt : (standardWatts?.[0] ?? luminaire.quicketWatt)
+  const maintenanceFactor = site.maintenanceFactor || 1
+
+  return {
+    siteType,
+    luminaireType,
+    quantity: site.quantity,
+    currentWatt: luminaire.currentWatt,
+    quicketWatt: defaultQuicketWatt,
+    dailyHours: site.dailyHours,
+    annualDays: site.annualDays,
+    electricityPrice: site.electricityPrice,
+    carbonFactor: site.carbonFactor,
+    currentMaintenanceCost: Math.round((luminaire.currentMaintenanceCost * maintenanceFactor) / 100) * 100,
+    quicketMaintenanceCost: Math.round((luminaire.quicketMaintenanceCost * maintenanceFactor) / 100) * 100,
+    currentMaintenanceCycle: luminaire.currentMaintenanceCycle,
+    quicketMaintenanceCycle: luminaire.quicketMaintenanceCycle,
+    years: site.years,
+    carbonPrice: site.carbonPrice,
+  }
+}
+
 const scenarioPresets = {
   industrialBay: buildDefaultParams('factory', 'bay-light'),
   warehouseLong: buildDefaultParams('warehouse', 'bay-light'),
@@ -456,7 +482,7 @@ function CarbonMiniChart({ result, t }) {
 }
 
 export default function App() {
-  const [form, setForm] = useState(scenarioPresets['工業天井燈'])
+  const [form, setForm] = useState(scenarioPresets.industrialBay)
   const [activeKpi, setActiveKpi] = useState(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [customSceneOpen, setCustomSceneOpen] = useState(false)
