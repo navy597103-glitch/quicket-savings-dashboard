@@ -63,11 +63,11 @@ const translations = {
     siteType: '場域類型', luminaireType: '燈具類型', quantity: '燈具數量', years: '計算年限',
     currentWatt: '現有瓦數', quicketWatt: 'QUICKET 瓦數', dailyHours: '每日使用', annualDays: '每年使用',
     electricityPrice: '電價', carbonFactor: '碳排係數', maintenanceBasis: '維護成本基準',
-    maintenanceBasisNote: '{t.maintenanceBasisNote}',
+    maintenanceBasisNote: '以「整燈更換」與「模組更換」作為比較基準，可依實際安裝高度、施工難度、工資、設備租用與停機需求調整。',
     currentPlan: '現有方案', quicket: 'QUICKET', maintenanceCycle: '維護週期', carbonPrice: '碳價估算',
     overallAnalysis: '整體效益分析',
-    electricityCompare: '{t.electricityCompare}', maintenanceCompare: '{t.maintenanceCompare}', carbonCompare: '{t.carbonCompare}',
-    elecSub: '{t.elecSub}', maintSub: '{t.maintSub}', carbonSub: '{t.carbonSub}',
+    electricityCompare: '累積電費比較', maintenanceCompare: '累積維護成本比較', carbonCompare: '累積節能減碳比較',
+    elecSub: '現有方案 vs QUICKET', maintSub: '整燈更換 vs QUICKET 模組更換', carbonSub: '用電量與碳排累積差異',
     yearGap: (y) => `${y} 年差額`, annualCarbon: '年度減碳',
     insight: '專案洞察',
     caseCond: '本案例條件：', annualBenefit: '年度效益：', longBenefit: '長期效益：',
@@ -675,10 +675,33 @@ export default function App() {
                 <h2 className="text-lg font-bold">{t.overallAnalysis}</h2>
               </div>
               <div className="p-4 lg:p-5">
-                <div className="grid gap-4 min-[900px]:grid-cols-3">
-                  <ElectricityChart result={result} />
-                  <MaintenanceChart result={result} />
-                  <CarbonMiniChart result={result} />
+                <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
+                  {[
+                    ['electricity', t.electricityCompare],
+                    ['maintenance', t.maintenanceCompare],
+                    ['carbon', t.carbonCompare],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setMobileChart(key)}
+                      className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold ${mobileChart === key ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-300 bg-white text-slate-600'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="md:hidden">
+                  {mobileChart === 'electricity' && <ElectricityChart result={result} t={t} />}
+                  {mobileChart === 'maintenance' && <MaintenanceChart result={result} t={t} />}
+                  {mobileChart === 'carbon' && <CarbonMiniChart result={result} t={t} />}
+                </div>
+                <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
+                  <ElectricityChart result={result} t={t} />
+                  <MaintenanceChart result={result} t={t} />
+                  <div className="md:col-span-2 xl:col-span-1">
+                    <CarbonMiniChart result={result} t={t} />
+                  </div>
                 </div>
               </div>
             </div>
