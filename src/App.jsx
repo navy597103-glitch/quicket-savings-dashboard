@@ -3,10 +3,8 @@ import {
   Calculator,
   ChevronDown,
   ChevronUp,
-  ClipboardList,
   Cloud,
   DollarSign,
-  FileText,
   Grid,
   Info,
   Leaf,
@@ -259,12 +257,12 @@ function getKpiExplanation(activeKpi, result, form) {
     },
     maintenance: {
       title: `${form.years} 年維護節約如何計算`,
-      description: `${form.years} 年維護節約是比較傳統整燈更換與 QUICKET 模組更換在維護成本上的差異。QUICKET 維護時可更換模組，不必反覆更換整組燈具。`,
-      formula: `${form.years} 年維護節約 = 現有方案累積維護成本 - QUICKET 累積維護成本`,
+      description: `本指標比較現有照明方案與 QUICKET 在維護方式上的成本差異。現有方案以整燈更換為基準，QUICKET 以模組更換為基準；材料、工時、施工難度與營運干擾都可反映在單次維護成本中。`,
+      formula: `維護節約 = 現有方案維護總成本 - QUICKET 維護總成本；維護總成本 = 燈具數量 × 單次維護成本 × 維護次數`,
       lines: [
-        `維護次數 = 現有方案 ${result.currentMaintenanceCount} 次；QUICKET ${result.quicketMaintenanceCount} 次`,
-        `現有方案維護成本 = ${formatNumber(form.quantity)} × ${formatNTD(form.currentMaintenanceCost)} × ${result.currentMaintenanceCount} = ${formatNTD(result.currentMaintenanceTotal)}`,
-        `QUICKET 維護成本 = ${formatNumber(form.quantity)} × ${formatNTD(form.quicketMaintenanceCost)} × ${result.quicketMaintenanceCount} = ${formatNTD(result.quicketMaintenanceTotal)}`,
+        `維護次數 = floor(計算年限 ÷ 維護週期)：現有方案 ${result.currentMaintenanceCount} 次；QUICKET ${result.quicketMaintenanceCount} 次`,
+        `現有方案：以整燈拆換、重新安裝與相關施工成本估算 = ${formatNumber(form.quantity)} × ${formatNTD(form.currentMaintenanceCost)} × ${result.currentMaintenanceCount} = ${formatNTD(result.currentMaintenanceTotal)}`,
+        `QUICKET：以模組更換、較少拆裝與較低施工干擾估算 = ${formatNumber(form.quantity)} × ${formatNTD(form.quicketMaintenanceCost)} × ${result.quicketMaintenanceCount} = ${formatNTD(result.quicketMaintenanceTotal)}`,
         `維護節約 = ${formatNTD(result.maintenanceSaved)}`,
       ],
     },
@@ -358,13 +356,13 @@ function TabButton({ active, icon: Icon, label, onClick }) {
 
 function MetricBlock({ icon: Icon, title, text }) {
   return (
-    <div className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
+    <div className="flex min-w-[150px] items-center gap-3 rounded-2xl bg-white/70 px-3 py-3">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-700">
         <Icon size={22} />
       </div>
       <div className="min-w-0 leading-5">
-        <div className="whitespace-nowrap text-sm font-semibold text-slate-800">{title}</div>
-        <div className="whitespace-nowrap text-xs text-slate-500">{text}</div>
+        <div className="text-sm font-bold text-slate-800">{title}</div>
+        <div className="text-xs text-slate-500">{text}</div>
       </div>
     </div>
   )
@@ -390,10 +388,10 @@ function ElectricityChart({ result }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <div className="pointer-events-none absolute right-5 top-[46%] rounded-2xl border border-blue-100 bg-white/95 px-4 py-3 text-center text-sm shadow-sm">
+      <div className="pointer-events-none absolute right-5 top-5 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
         <div className="font-semibold text-slate-700">{result.years} 年累積</div>
         <div className="font-semibold text-slate-700">電費差額</div>
-        <div className="mt-1 text-lg font-bold text-blue-700">{compactNtd(result.totalElectricitySaved)}</div>
+        <div className="mt-0.5 text-base font-bold text-blue-700">{compactNtd(result.totalElectricitySaved)}</div>
       </div>
     </div>
   )
@@ -419,9 +417,9 @@ function MaintenanceChart({ result }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="pointer-events-none absolute right-5 top-[46%] rounded-2xl border border-blue-100 bg-white/95 px-4 py-3 text-center text-sm shadow-sm">
+      <div className="pointer-events-none absolute right-5 top-5 rounded-2xl border border-blue-100 bg-white/95 px-3 py-2 text-center text-xs shadow-sm">
         <div className="font-semibold text-slate-700">{result.years} 年維護差額</div>
-        <div className="mt-1 text-lg font-bold text-blue-700">{compactNtd(result.maintenanceSaved)}</div>
+        <div className="mt-0.5 text-base font-bold text-blue-700">{compactNtd(result.maintenanceSaved)}</div>
       </div>
     </div>
   )
@@ -611,30 +609,37 @@ export default function App() {
                   {advancedOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
                 {advancedOpen && (
-                  <div className="space-y-4 border-t border-blue-100 px-4 py-4">
-                    <NumberField label="電價" suffix="NTD/kWh" value={form.electricityPrice} step={0.01} customized={customizedSet.has('electricityPrice')} onChange={(value) => set('electricityPrice', value)} />
-                    <NumberField label="碳排係數" suffix="kg/kWh" value={form.carbonFactor} step={0.001} customized={customizedSet.has('carbonFactor')} onChange={(value) => set('carbonFactor', value)} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <NumberField label="現有維護成本" suffix="NTD/次" value={form.currentMaintenanceCost} customized={customizedSet.has('currentMaintenanceCost')} onChange={(value) => set('currentMaintenanceCost', value)} />
-                      <NumberField label="QUICKET 模組成本" suffix="NTD/次" value={form.quicketMaintenanceCost} customized={customizedSet.has('quicketMaintenanceCost')} onChange={(value) => set('quicketMaintenanceCost', value)} />
+                  <div className="space-y-5 border-t border-blue-100 px-4 py-4">
+                    <div className="space-y-4">
+                      <NumberField label="電價" suffix="NTD/kWh" value={form.electricityPrice} step={0.01} customized={customizedSet.has('electricityPrice')} onChange={(value) => set('electricityPrice', value)} />
+                      <NumberField label="碳排係數" suffix="kg/kWh" value={form.carbonFactor} step={0.001} customized={customizedSet.has('carbonFactor')} onChange={(value) => set('carbonFactor', value)} />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <NumberField label="現有維護週期" suffix="年" value={form.currentMaintenanceCycle} customized={customizedSet.has('currentMaintenanceCycle')} onChange={(value) => set('currentMaintenanceCycle', value)} />
-                      <NumberField label="QUICKET 維護週期" suffix="年" value={form.quicketMaintenanceCycle} customized={customizedSet.has('quicketMaintenanceCycle')} onChange={(value) => set('quicketMaintenanceCycle', value)} />
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="mb-1 text-sm font-bold text-blue-950">維護成本基準</div>
+                      <p className="mb-3 text-xs leading-5 text-slate-500">以「整燈更換」與「模組更換」作為比較基準，可依實際安裝高度、施工難度、工資、設備租用與停機需求調整。</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <NumberField label="現有方案" suffix="NTD/次" value={form.currentMaintenanceCost} customized={customizedSet.has('currentMaintenanceCost')} onChange={(value) => set('currentMaintenanceCost', value)} />
+                        <NumberField label="QUICKET" suffix="NTD/次" value={form.quicketMaintenanceCost} customized={customizedSet.has('quicketMaintenanceCost')} onChange={(value) => set('quicketMaintenanceCost', value)} />
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-[11px] leading-4 text-slate-500">
+                        <div>整燈拆換、重新安裝與相關施工成本。</div>
+                        <div>模組更換、較少拆裝與較低施工干擾。</div>
+                      </div>
                     </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="mb-3 text-sm font-bold text-blue-950">維護週期</div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <NumberField label="現有方案" suffix="年" value={form.currentMaintenanceCycle} customized={customizedSet.has('currentMaintenanceCycle')} onChange={(value) => set('currentMaintenanceCycle', value)} />
+                        <NumberField label="QUICKET" suffix="年" value={form.quicketMaintenanceCycle} customized={customizedSet.has('quicketMaintenanceCycle')} onChange={(value) => set('quicketMaintenanceCycle', value)} />
+                      </div>
+                    </div>
+
                     <NumberField label="碳價估算" suffix="NTD/ton" value={form.carbonPrice} customized={customizedSet.has('carbonPrice')} onChange={(value) => set('carbonPrice', value)} />
                   </div>
                 )}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setTab('summary')}
-                className="mt-2 flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-700 px-4 py-4 text-base font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-800"
-              >
-                <FileText size={22} />
-                產生專案摘要
-              </button>
             </div>
           </aside>
 
@@ -652,16 +657,13 @@ export default function App() {
             </div>
 
             <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-              <div className="grid grid-cols-2 border-b border-slate-200 bg-white min-[900px]:grid-cols-5">
-                <TabButton active={tab === 'overview'} icon={Grid} label="總覽" onClick={() => setTab('overview')} />
-                <TabButton active={tab === 'cost'} icon={DollarSign} label="成本比較" onClick={() => setTab('cost')} />
+              <div className="grid grid-cols-2 border-b border-slate-200 bg-white">
+                <TabButton active={tab === 'overview'} icon={Grid} label="累積電費與維護成本" onClick={() => setTab('overview')} />
                 <TabButton active={tab === 'carbon'} icon={Leaf} label="節能減碳" onClick={() => setTab('carbon')} />
-                <TabButton active={tab === 'summary'} icon={ClipboardList} label="專案摘要" onClick={() => setTab('summary')} />
-                <TabButton active={tab === 'formula'} icon={Calculator} label="公式與假設" onClick={() => setTab('formula')} />
               </div>
 
               <div className="p-4 lg:p-5">
-                {(tab === 'overview' || tab === 'cost') && (
+                {tab === 'overview' && (
                   <div className="grid gap-5 min-[900px]:grid-cols-2">
                     <ElectricityChart result={result} />
                     <MaintenanceChart result={result} />
@@ -689,50 +691,11 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {tab === 'summary' && (
-                  <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
-                    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                      <h3 className="mb-4 text-lg font-bold text-blue-950">試算結果摘要</h3>
-                      <div className="space-y-3 text-sm text-slate-700">
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">現有方案年度用電</span><span>{formatNumber(result.currentAnnualKwh)} kWh</span></div>
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">QUICKET 年度用電</span><span>{formatNumber(result.quicketAnnualKwh)} kWh</span></div>
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">年度節電</span><span className="font-semibold text-blue-700">{formatNumber(result.annualKwhSaved)} kWh</span></div>
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">年度電費節約</span><span className="font-semibold text-blue-700">{formatNTD(result.annualElectricitySaved)}</span></div>
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">{form.years} 年維護節約</span><span className="font-semibold text-blue-700">{formatNTD(result.maintenanceSaved)}</span></div>
-                        <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">估算碳價價值</span><span>{formatNTD(result.carbonValue)}</span></div>
-                        <div className="flex justify-between text-base font-bold"><span>{form.years} 年總效益</span><span className="text-blue-700">{compactNtd(result.totalSaved)}</span></div>
-                      </div>
-                    </div>
-                    <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 shadow-sm">
-                      <h3 className="mb-4 text-lg font-bold text-blue-950">客戶溝通重點</h3>
-                      <div className="space-y-4 text-sm leading-7 text-slate-700">
-                        <p>本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，QUICKET 可在節能、維護與碳效益上帶來顯著改善。</p>
-                        <p>對業主而言，價值不只來自低瓦數運作，也來自模組化維護與減少整燈更換所形成的長期營運成本下降。</p>
-                        <div className="rounded-2xl border border-blue-100 bg-white p-4 text-blue-800">
-                          {form.years} 年估算總效益：<span className="font-bold">{compactNtd(result.totalSaved)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {tab === 'formula' && (
-                  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-4 text-lg font-bold text-blue-950">公式與假設</h3>
-                    <div className="grid gap-4 text-sm leading-7 text-slate-700 lg:grid-cols-2">
-                      <div className="rounded-2xl bg-slate-50 p-4"><strong>年度用電</strong><br />燈具數量 × 瓦數 ÷ 1000 × 每日使用 × 每年使用天數</div>
-                      <div className="rounded-2xl bg-slate-50 p-4"><strong>年度電費節約</strong><br />年度節電量 × 電價</div>
-                      <div className="rounded-2xl bg-slate-50 p-4"><strong>維護成本</strong><br />維護次數 = floor(年數 ÷ 維護週期)；總成本 = 燈具數量 × 每次維護成本 × 維護次數</div>
-                      <div className="rounded-2xl bg-slate-50 p-4"><strong>碳效益估算</strong><br />年度節電量 × 碳排係數 ÷ 1000 × 年數 × 碳價估算</div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
             <div className="rounded-[28px] border border-blue-100 bg-blue-50/60 p-5 shadow-sm">
-              <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr] xl:items-center">
+              <div className="grid gap-5 2xl:grid-cols-[1.4fr_1fr] 2xl:items-center">
                 <div className="flex gap-4">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white">
                     <Lightbulb size={28} />
@@ -740,11 +703,14 @@ export default function App() {
                   <div>
                     <h3 className="text-lg font-bold text-blue-950">專案洞察</h3>
                     <p className="mt-2 text-sm leading-7 text-slate-700">
-                      本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，QUICKET 可在節能、維護與碳效益上帶來顯著改善，有效降低營運成本並提升永續競爭力。
+                      本案例以 {formatNumber(form.quantity)} 盞{siteOptions[form.siteType]}{luminaireOptions[form.luminaireType]}、{form.years} 年使用情境估算，年度節電 {formatNumber(result.annualKwhSaved)} kWh、年度電費節約 {formatNTD(result.annualElectricitySaved)}，並可形成 {compactNtd(result.maintenanceSaved)} 的維護節約；{form.years} 年估算總效益約 {compactNtd(result.totalSaved)}。
                     </p>
+                    <div className="mt-3 rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-blue-800">
+                      {form.years} 年估算總效益：{compactNtd(result.totalSaved)}
+                    </div>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-3 2xl:grid-cols-3">
                   <MetricBlock icon={DollarSign} title="顯著降低" text="營運成本" />
                   <MetricBlock icon={Leaf} title="提升能源效率" text="與永續表現" />
                   <MetricBlock icon={LineChart} title="長期穩定" text="投資報酬" />
@@ -752,7 +718,7 @@ export default function App() {
               </div>
             </div>
 
-            <p className="pb-3 text-xs text-slate-500">註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。</p>
+            <p className="pb-3 text-xs leading-5 text-slate-500">註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。維護成本以整燈更換與模組更換為比較基準，實際費用仍可能受安裝高度、施工難度、工資、設備租用與停機需求影響。</p>
           </section>
         </main>
       </div>
