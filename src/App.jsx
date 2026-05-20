@@ -37,6 +37,22 @@ const compactNtd = (value) => {
 }
 const formatM = (value) => (Math.abs(value) >= 1_000_000 ? `${formatNumber(value / 1_000_000, 1)}M` : formatNumber(value))
 
+const formatKpiCount = (value, locale = 'zh') => {
+  const safe = Math.max(0, Math.round(Number.isFinite(value) ? value : 0))
+  if (locale === 'zh') {
+    if (safe >= 10_000) {
+      const digits = safe >= 100_000 ? 0 : 1
+      return `${(safe / 10_000).toFixed(digits).replace(/\.0$/, '')}萬`
+    }
+    return nf.format(safe)
+  }
+  if (safe >= 1_000) {
+    const digits = safe >= 10_000 ? 0 : 1
+    return `${(safe / 1_000).toFixed(digits).replace(/\.0$/, '')}k`
+  }
+  return new Intl.NumberFormat('en-US').format(safe)
+}
+
 // 可後續依最新市場或正式報價替換的參考值
 const EU_EUA_NTD_PER_TON = 2600
 const TAIWAN_CARBON_FEE_NTD_PER_TON = 300
@@ -73,7 +89,7 @@ const translations = {
     costSaving: '成本節約', carbonValue: '碳排價值', recycling: '永續回收',
     note: '註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。維護成本以整燈更換與模組更換為比較基準，實際費用仍可能受安裝高度、施工難度、工資、設備租用與停機需求影響。碳排價值中的 EU / 台灣價格為暫用參考值，可依正式價格更新。',
     totalKpi: ()=> '總效益', annualElecSave: '電費節約', maintKpi: ()=> '維護節約', annualEnergy: '節電量', annualCarbonKpi: '減碳量',
-    totalCaption: (n)=> `約可抵 ${n} 盞整燈更換`, elecCaption: (n)=> `約可支應 ${n} 次模組維護`, maintCaption: (n)=> `約可抵 ${n} 盞整燈更換`, energyCaption:(n)=> `約等於 ${n} 戶家庭年用電`, carbonCaption:(n)=> `約等於 ${n} 棵樹年吸碳`,
+    totalCaption: (n)=> `約可抵 ${n} 盞整燈更換`, elecCaption: (n)=> `相當於 ${n} 次維護`, maintCaption: (n)=> `約可抵 ${n} 盞整燈更換`, energyCaption:(n)=> `約等於 ${n} 戶家庭年用電`, carbonCaption:(n)=> `約等於 ${n} 棵樹年吸碳`,
     insightLine1: (label,q,y)=> `${label}，共 ${q} 盞，評估期間 ${y} 年。`,
     insightLine2: (kwh,ntd)=> `每年可節電 ${kwh} kWh，並節省電費約 ${ntd}。`,
     insightLine3: (y,ms,ts)=> `${y} 年維護節約約 ${ms}，總效益約 ${ts}。`,
@@ -140,7 +156,7 @@ const translations = {
     costSaving: 'Cost Saving', carbonValue: 'Carbon Value', recycling: 'Circular Recovery',
     note: 'Note: All figures are estimates. Actual benefits may vary with site conditions, electricity prices, and maintenance strategies. Maintenance cost uses whole-luminaire replacement versus module replacement as the comparison basis. EU and Taiwan carbon values are provisional references and can be updated later.',
     totalKpi: ()=> 'Total Benefit', annualElecSave: 'Bill Saving', maintKpi: ()=> 'Maintenance Saving', annualEnergy: 'Energy Saving', annualCarbonKpi: 'Carbon Cut',
-    totalCaption: (n)=> `Equals about ${n} luminaire replacements`, elecCaption: (n)=> `Covers about ${n} module service events`, maintCaption: (n)=> `Equals about ${n} luminaire replacements`, energyCaption:(n)=> `Equals about ${n} households’ annual use`, carbonCaption:(n)=> `Equals about ${n} trees’ annual absorption`,
+    totalCaption: (n)=> `≈ ${n} fixture replacements`, elecCaption: (n)=> `Covers ≈ ${n} service events`, maintCaption: (n)=> `≈ ${n} fixture replacements`, energyCaption:(n)=> `≈ ${n} households’ annual use`, carbonCaption:(n)=> `≈ ${n} trees’ annual absorption`,
     insightLine1: (label,q,y)=> `${label}, ${q} fixtures in scope, evaluated over ${y} years.`,
     insightLine2: (kwh,ntd)=> `Estimated annual saving of ${kwh} kWh and ${ntd} in electricity cost.`,
     insightLine3: (y,ms,ts)=> `Estimated ${y}-year maintenance saving of ${ms}, with total benefit around ${ts}.`,
@@ -344,7 +360,7 @@ function KpiCard({ kpi, active, onClick }) {
       </div>
       <div className={`flex h-[34px] shrink-0 items-center justify-center text-center text-[13px] font-semibold leading-4 xl:h-[40px] xl:text-sm xl:leading-5 ${active ? 'text-blue-950' : 'text-slate-900'}`}>{kpi.title}</div>
       <div className="flex h-[36px] shrink-0 items-center justify-center whitespace-nowrap text-center text-lg font-bold tracking-tight text-blue-900 xl:h-[38px] xl:text-xl">{kpi.value}</div>
-      <div className="flex flex-1 items-center justify-center text-center text-[11px] leading-4 text-slate-500 xl:text-xs xl:leading-5">{kpi.caption}</div>
+      <div className="flex flex-1 items-center justify-center break-keep text-center text-[11px] leading-4 text-slate-500 xl:text-xs xl:leading-5">{kpi.caption}</div>
     </button>
   )
 }
@@ -586,11 +602,11 @@ export default function App() {
   const projectLabel = projectName.trim() || `${t.siteLabels[form.siteType]} ${t.luminaireLabels[form.luminaireType]}`
 
   const kpis = [
-    { key: 'total', icon: TrendingUp, title: t.totalKpi(form.years), value: compactNtd(result.totalSaved), caption: t.totalCaption(formatNumber(result.totalReplacementEquivalent)) },
-    { key: 'electricityCost', icon: Zap, title: t.annualElecSave, value: formatNTD(result.annualElectricitySaved), caption: t.elecCaption(formatNumber(result.annualModuleEquivalent)) },
-    { key: 'maintenance', icon: Wrench, title: t.maintKpi(form.years), value: compactNtd(result.maintenanceSaved), caption: t.maintCaption(formatNumber(result.maintenanceReplacementEquivalent)) },
-    { key: 'energy', icon: Leaf, title: t.annualEnergy, value: `${formatNumber(result.annualKwhSaved)} kWh`, caption: t.energyCaption(formatNumber(householdEquivalent)) },
-    { key: 'carbon', icon: Cloud, title: t.annualCarbonKpi, value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: t.carbonCaption(formatNumber(treeEquivalent)) },
+    { key: 'total', icon: TrendingUp, title: t.totalKpi(form.years), value: compactNtd(result.totalSaved), caption: t.totalCaption(formatKpiCount(result.totalReplacementEquivalent, locale)) },
+    { key: 'electricityCost', icon: Zap, title: t.annualElecSave, value: formatNTD(result.annualElectricitySaved), caption: t.elecCaption(formatKpiCount(result.annualModuleEquivalent, locale)) },
+    { key: 'maintenance', icon: Wrench, title: t.maintKpi(form.years), value: compactNtd(result.maintenanceSaved), caption: t.maintCaption(formatKpiCount(result.maintenanceReplacementEquivalent, locale)) },
+    { key: 'energy', icon: Leaf, title: t.annualEnergy, value: `${formatNumber(result.annualKwhSaved)} kWh`, caption: t.energyCaption(formatKpiCount(householdEquivalent, locale)) },
+    { key: 'carbon', icon: Cloud, title: t.annualCarbonKpi, value: `${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`, caption: t.carbonCaption(formatKpiCount(treeEquivalent, locale)) },
   ]
 
   return (
