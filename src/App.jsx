@@ -72,8 +72,8 @@ const translations = {
     totalBenefitLine: (y,v) => `${y} 年估算總效益：${v}`,
     costSaving: '成本節約', carbonValue: '碳排價值', recycling: '永續回收',
     note: '註：所有數值為估算結果，實際效益可能因場域條件、電價與維護策略而異。維護成本以整燈更換與模組更換為比較基準，實際費用仍可能受安裝高度、施工難度、工資、設備租用與停機需求影響。碳排價值中的 EU / 台灣價格為暫用參考值，可依正式價格更新。',
-    totalKpi: (y)=> `${y} 年總效益`, annualElecSave: '年度電費節約', maintKpi: (y)=> `${y} 年維護節約`, annualEnergy: '年度節電量', annualCarbonKpi: '年度減碳量',
-    totalCaption: (n)=> `約抵 ${n} 盞整燈`, elecCaption: (n)=> `約支應 ${n} 次模組維護`, maintCaption: (n)=> `約抵 ${n} 盞整燈`, energyCaption:(n)=> `約 ${n} 戶家庭年用電`, carbonCaption:(n)=> `約 ${n} 棵樹年吸碳`,
+    totalKpi: ()=> '總效益', annualElecSave: '電費節約', maintKpi: ()=> '維護節約', annualEnergy: '節電量', annualCarbonKpi: '減碳量',
+    totalCaption: (n)=> `約可抵 ${n} 盞整燈更換`, elecCaption: (n)=> `約可支應 ${n} 次模組維護`, maintCaption: (n)=> `約可抵 ${n} 盞整燈更換`, energyCaption:(n)=> `約等於 ${n} 戶家庭年用電`, carbonCaption:(n)=> `約等於 ${n} 棵樹年吸碳`,
     insightLine1: (label,q,y)=> `${label}，共 ${q} 盞，評估期間 ${y} 年。`,
     insightLine2: (kwh,ntd)=> `每年可節電 ${kwh} kWh，並節省電費約 ${ntd}。`,
     insightLine3: (y,ms,ts)=> `${y} 年維護節約約 ${ms}，總效益約 ${ts}。`,
@@ -139,8 +139,8 @@ const translations = {
     totalBenefitLine: (y,v) => `${y}-Year Estimated Total Benefit: ${v}`,
     costSaving: 'Cost Saving', carbonValue: 'Carbon Value', recycling: 'Circular Recovery',
     note: 'Note: All figures are estimates. Actual benefits may vary with site conditions, electricity prices, and maintenance strategies. Maintenance cost uses whole-luminaire replacement versus module replacement as the comparison basis. EU and Taiwan carbon values are provisional references and can be updated later.',
-    totalKpi: (y)=> `${y}-Year Benefit`, annualElecSave: 'Bill Saving', maintKpi: (y)=> `Maintenance Saving`, annualEnergy: 'Energy Saving', annualCarbonKpi: 'Carbon Cut',
-    totalCaption: (n)=> `≈ ${n} luminaire replacements`, elecCaption: (n)=> `≈ ${n} module services`, maintCaption: (n)=> `≈ ${n} luminaire replacements`, energyCaption:(n)=> `≈ ${n} homes / year`, carbonCaption:(n)=> `≈ ${n} trees / year`,
+    totalKpi: ()=> 'Total Benefit', annualElecSave: 'Bill Saving', maintKpi: ()=> 'Maintenance Saving', annualEnergy: 'Energy Saving', annualCarbonKpi: 'Carbon Cut',
+    totalCaption: (n)=> `Equals about ${n} luminaire replacements`, elecCaption: (n)=> `Covers about ${n} module service events`, maintCaption: (n)=> `Equals about ${n} luminaire replacements`, energyCaption:(n)=> `Equals about ${n} households’ annual use`, carbonCaption:(n)=> `Equals about ${n} trees’ annual absorption`,
     insightLine1: (label,q,y)=> `${label}, ${q} fixtures in scope, evaluated over ${y} years.`,
     insightLine2: (kwh,ntd)=> `Estimated annual saving of ${kwh} kWh and ${ntd} in electricity cost.`,
     insightLine3: (y,ms,ts)=> `Estimated ${y}-year maintenance saving of ${ms}, with total benefit around ${ts}.`,
@@ -336,15 +336,15 @@ function KpiCard({ kpi, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex h-[168px] w-full flex-col rounded-3xl border bg-white p-3 text-left shadow-md transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md lg:h-[152px] lg:p-3 xl:h-[170px] xl:p-4 2xl:h-[190px] ${active ? 'border-blue-600 shadow-lg shadow-blue-100/70' : 'border-slate-300'}`}
+      className={`group relative flex h-[190px] w-full flex-col rounded-3xl border bg-white p-4 text-left shadow-md transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md lg:h-[178px] lg:p-3 xl:h-[190px] xl:p-4 2xl:h-[205px] ${active ? 'border-blue-600 shadow-lg shadow-blue-100/70' : 'border-slate-300'}`}
     >
       {active && <div className="absolute inset-x-8 top-0 h-1 rounded-b-full bg-blue-600" />}
       <div className={`mx-auto mb-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition lg:h-9 lg:w-9 xl:h-11 xl:w-11 ${active ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-blue-700 group-hover:bg-blue-50'}`}>
         <Icon size={22} strokeWidth={2.2} className="xl:h-6 xl:w-6" />
       </div>
-      <div className={`flex h-[38px] shrink-0 items-center justify-center overflow-hidden text-center text-[13px] font-semibold leading-4 xl:h-[44px] xl:text-sm xl:leading-5 ${active ? 'text-blue-950' : 'text-slate-900'}`}>{kpi.title}</div>
-      <div className="flex h-[30px] shrink-0 items-center justify-center whitespace-nowrap text-center text-lg font-bold tracking-tight text-blue-900 xl:h-[34px] xl:text-xl">{kpi.value}</div>
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden text-center text-[11px] leading-4 text-slate-500 xl:text-xs xl:leading-5">{kpi.caption}</div>
+      <div className={`flex h-[34px] shrink-0 items-center justify-center text-center text-[13px] font-semibold leading-4 xl:h-[40px] xl:text-sm xl:leading-5 ${active ? 'text-blue-950' : 'text-slate-900'}`}>{kpi.title}</div>
+      <div className="flex h-[36px] shrink-0 items-center justify-center whitespace-nowrap text-center text-lg font-bold tracking-tight text-blue-900 xl:h-[38px] xl:text-xl">{kpi.value}</div>
+      <div className="flex flex-1 items-center justify-center text-center text-[11px] leading-4 text-slate-500 xl:text-xs xl:leading-5">{kpi.caption}</div>
     </button>
   )
 }
