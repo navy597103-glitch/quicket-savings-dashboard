@@ -148,8 +148,8 @@ const translations = {
     maintenanceBasisNote: 'Uses whole-luminaire replacement versus module replacement as the comparison basis; values can be adjusted by installation height, labor difficulty, equipment rental, and downtime needs.',
     currentPlan: 'Current Plan', quicket: 'QUICKET', maintenanceCycle: 'Maintenance Cycle', carbonPrice: 'Carbon Price',
     overallAnalysis: 'Overall Benefit Analysis',
-    electricityCompare: 'Cumulative Electricity Cost', maintenanceCompare: 'Cumulative Maintenance Cost', carbonCompare: 'Cumulative Carbon Reduction',
-    elecSub: 'Current plan vs QUICKET', maintSub: 'Whole luminaire replacement vs QUICKET module replacement', carbonSub: 'Accumulated electricity and carbon gap',
+    electricityCompare: 'Cumulative Electricity Cost', maintenanceCompare: 'Cumulative Maintenance Cost', carbonCompare: 'Cumulative Carbon Savings',
+    elecSub: 'Current vs QUICKET', maintSub: 'Full replacement vs Module replacement', carbonSub: 'Electricity-related emissions gap',
     yearGap: (y) => `${y}-Year Gap`, annualCarbon: 'Annual Carbon Cut',
     insight: 'Project Insight',
     caseCond: 'Project Scope:', annualBenefit: 'Annual Benefit:', longBenefit: 'Long-Term Benefit:',
@@ -169,7 +169,7 @@ const translations = {
     customTag: 'Customized',
     wholeReplacementNote: 'Whole luminaire removal, re-installation, and related field work.',
     moduleReplacementNote: 'Module replacement with less disassembly and lower field disruption.',
-    chartNames: { currentElectricity:'Current electricity cost', quicketElectricity:'QUICKET electricity cost', currentMaintenance:'Whole replacement maintenance cost', quicketMaintenance:'QUICKET module maintenance cost', currentCarbon:'Current carbon emissions', quicketCarbon:'QUICKET carbon emissions' },
+    chartNames: { currentElectricity:'Current', quicketElectricity:'QUICKET', currentMaintenance:'Full replacement', quicketMaintenance:'QUICKET module', currentCarbon:'Current', quicketCarbon:'QUICKET' },
     kpiExplain: {
       totalTitle: (y)=> `${y}-Year Total Benefit Calculation`,
       totalDesc: (y)=> `The ${y}-year total benefit combines electricity savings, maintenance savings, and estimated carbon value to evaluate the lifecycle financial improvement after QUICKET deployment.`,
@@ -428,23 +428,44 @@ function ChartBadge({ label, value }) {
   )
 }
 
+
+function ChartTooltip({ active, label, payload, formatter }) {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="max-w-[180px] rounded-xl border border-blue-200 bg-white/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
+      <div className="mb-1 font-bold text-slate-900">{label}</div>
+      <div className="space-y-1">
+        {payload.map((item) => (
+          <div key={item.dataKey} className="flex items-center justify-between gap-3 whitespace-nowrap">
+            <span className="min-w-0 truncate text-slate-500">{item.name}</span>
+            <span className="shrink-0 font-semibold text-blue-700">{formatter(item.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const tooltipWrapperStyle = { zIndex: 80, outline: 'none', pointerEvents: 'none' }
+
 function ElectricityChart({ result, t }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-blue-950">{t.electricityCompare}</h3>
-          <p className="text-xs text-slate-600">{t.elecSub}</p>
+    <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
+        <div className="min-w-0">
+          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.electricityCompare}</h3>
+          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.elecSub}</p>
         </div>
         <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.totalElectricitySaved)} />
       </div>
-      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={formatM} />
-            <Tooltip formatter={(value, name) => [formatNTD(value), name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip content={<ChartTooltip formatter={compactNtd} />} allowEscapeViewBox={{ x: true, y: true }} wrapperStyle={tooltipWrapperStyle} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="currentElectricity" name={t.chartNames.currentElectricity} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
             <Bar dataKey="quicketElectricity" name={t.chartNames.quicketElectricity} fill="#2563eb" radius={[7, 7, 0, 0]} />
@@ -457,21 +478,21 @@ function ElectricityChart({ result, t }) {
 
 function MaintenanceChart({ result, t }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-blue-950">{t.maintenanceCompare}</h3>
-          <p className="text-xs text-slate-600">{t.maintSub}</p>
+    <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
+        <div className="min-w-0">
+          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.maintenanceCompare}</h3>
+          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.maintSub}</p>
         </div>
         <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.maintenanceSaved)} />
       </div>
-      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={formatM} />
-            <Tooltip formatter={(value, name) => [formatNTD(value), name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip content={<ChartTooltip formatter={compactNtd} />} allowEscapeViewBox={{ x: true, y: true }} wrapperStyle={tooltipWrapperStyle} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="currentMaintenance" name={t.chartNames.currentMaintenance} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
             <Bar dataKey="quicketMaintenance" name={t.chartNames.quicketMaintenance} fill="#2563eb" radius={[7, 7, 0, 0]} />
@@ -484,21 +505,21 @@ function MaintenanceChart({ result, t }) {
 
 function CarbonMiniChart({ result, t }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-blue-950">{t.carbonCompare}</h3>
-          <p className="text-xs text-slate-600">{t.carbonSub}</p>
+    <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
+      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
+        <div className="min-w-0">
+          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.carbonCompare}</h3>
+          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.carbonSub}</p>
         </div>
         <ChartBadge label={t.annualCarbon} value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
       </div>
-      <div className="h-44 w-full min-w-0 overflow-hidden sm:h-48">
+      <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe4ee" />
             <XAxis dataKey="year" stroke="#475569" />
             <YAxis stroke="#475569" tickFormatter={(value) => `${formatNumber(value / 1000, 0)}t`} />
-            <Tooltip formatter={(value, name) => [`${formatNumber(value / 1000, 1)} tCO₂e`, name]} contentStyle={{ background: '#ffffff', border: '1px solid #bfdbfe', borderRadius: 12 }} />
+            <Tooltip content={<ChartTooltip formatter={(value) => `${formatNumber(value / 1000, 1)} tCO₂e`} />} allowEscapeViewBox={{ x: true, y: true }} wrapperStyle={tooltipWrapperStyle} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="currentCarbon" name={t.chartNames.currentCarbon} fill="#8a9bb0" radius={[7, 7, 0, 0]} />
             <Bar dataKey="quicketCarbon" name={t.chartNames.quicketCarbon} fill="#2563eb" radius={[7, 7, 0, 0]} />
@@ -724,7 +745,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-md">
+            <div className="overflow-visible rounded-[28px] border border-slate-300 bg-white shadow-md">
               <div className="flex items-center gap-2 border-b border-slate-300 px-5 py-4 text-blue-800">
                 <Grid size={18} />
                 <h2 className="text-lg font-bold">{t.overallAnalysis}</h2>
@@ -746,7 +767,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="min-w-0 overflow-hidden md:hidden">
+                <div className="min-w-0 overflow-visible md:hidden">
                   {mobileChart === 'electricity' && <ElectricityChart result={result} t={t} />}
                   {mobileChart === 'maintenance' && <MaintenanceChart result={result} t={t} />}
                   {mobileChart === 'carbon' && <CarbonMiniChart result={result} t={t} />}
