@@ -81,8 +81,9 @@ const translations = {
     maintenanceBasisNote: '以「整燈更換」與「模組更換」作為比較基準，可依實際安裝高度、施工難度、工資、設備租用與停機需求調整。',
     currentPlan: '現有方案', quicket: 'QUICKET', maintenanceCycle: '維護週期', carbonPrice: '碳價估算',
     overallAnalysis: '整體效益分析',
-    electricityCompare: '累積電費比較', maintenanceCompare: '累積維護成本比較', carbonCompare: '累積節能減碳比較',
-    elecSub: '現有方案 vs QUICKET', maintSub: '整燈更換 vs QUICKET 模組更換', carbonSub: '用電量與碳排累積差異',
+    cumLabel: '累積',
+    electricityCompare: '電費比較', maintenanceCompare: '維護成本比較', carbonCompare: '減碳效益比較',
+    elecSub: '現有方案 vs QUICKET', maintSub: '整燈更換 vs 模組更換', carbonSub: '用電與碳排差異',
     yearGap: (y) => `${y} 年差額`, annualCarbon: '年度減碳',
     insight: '專案洞察',
     caseCond: '本案例條件：', annualBenefit: '年度效益：', longBenefit: '長期效益：',
@@ -148,9 +149,10 @@ const translations = {
     maintenanceBasisNote: 'Uses whole-luminaire replacement versus module replacement as the comparison basis; values can be adjusted by installation height, labor difficulty, equipment rental, and downtime needs.',
     currentPlan: 'Current Plan', quicket: 'QUICKET', maintenanceCycle: 'Maintenance Cycle', carbonPrice: 'Carbon Price',
     overallAnalysis: 'Overall Benefit Analysis',
-    electricityCompare: 'Cumulative Electricity Cost', maintenanceCompare: 'Cumulative Maintenance Cost', carbonCompare: 'Cumulative Carbon Savings',
-    elecSub: 'Current vs QUICKET', maintSub: 'Full replacement vs Module replacement', carbonSub: 'Electricity-related emissions gap',
-    yearGap: (y) => `${y}-Year Gap`, annualCarbon: 'Annual Carbon Cut',
+    cumLabel: 'CUM',
+    electricityCompare: 'Electricity Cost', maintenanceCompare: 'Maintenance Cost', carbonCompare: 'Carbon Savings',
+    elecSub: 'Current vs QUICKET', maintSub: 'Full vs Module', carbonSub: 'Emission Gap',
+    yearGap: (y) => `${y}-Year Gap`, annualCarbon: 'Annual Cut',
     insight: 'Project Insight',
     caseCond: 'Project Scope:', annualBenefit: 'Annual Benefit:', longBenefit: 'Long-Term Benefit:',
     totalBenefitLine: (y,v) => `${y}-Year Estimated Total Benefit: ${v}`,
@@ -421,9 +423,9 @@ function MetricBlock({ icon: Icon, title, children }) {
 
 function ChartBadge({ label, value }) {
   return (
-    <div className="shrink-0 rounded-2xl border border-blue-200 bg-white px-2.5 py-2 text-right shadow-sm">
-      <div className="text-[11px] font-semibold text-slate-600">{label}</div>
-      <div className="text-sm font-bold text-blue-700">{value}</div>
+    <div className="flex h-[64px] w-[116px] shrink-0 flex-col items-end justify-center rounded-2xl border border-blue-200 bg-white px-3 py-2 text-right shadow-sm">
+      <div className="whitespace-nowrap text-[11px] font-semibold leading-4 text-slate-600">{label}</div>
+      <div className="mt-1 whitespace-nowrap text-sm font-bold leading-5 text-blue-700">{value}</div>
     </div>
   )
 }
@@ -433,7 +435,7 @@ function ChartTooltip({ active, label, payload, formatter }) {
   if (!active || !payload?.length) return null
 
   return (
-    <div className="max-w-[180px] rounded-xl border border-blue-200 bg-white/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
+    <div className="w-[160px] rounded-xl border border-blue-200 bg-white/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
       <div className="mb-1 font-bold text-slate-900">{label}</div>
       <div className="space-y-1">
         {payload.map((item) => (
@@ -449,16 +451,24 @@ function ChartTooltip({ active, label, payload, formatter }) {
 
 const tooltipWrapperStyle = { zIndex: 80, outline: 'none', pointerEvents: 'none' }
 
+function ChartHeading({ tag, title, subtitle, badgeLabel, badgeValue }) {
+  return (
+    <div className="mb-3 grid min-h-[96px] grid-cols-[minmax(0,1fr)_116px] items-start gap-3">
+      <div className="min-w-0">
+        <div className="mb-1.5 inline-flex rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-blue-700">{tag}</div>
+        <h3 className="min-h-[56px] text-[15px] font-bold leading-7 text-blue-950">{title}</h3>
+        <p className="min-h-[20px] text-xs leading-4 text-slate-600">{subtitle}</p>
+      </div>
+      <ChartBadge label={badgeLabel} value={badgeValue} />
+    </div>
+  )
+}
+
 function ElectricityChart({ result, t }) {
   return (
     <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
-        <div className="min-w-0">
-          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.electricityCompare}</h3>
-          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.elecSub}</p>
-        </div>
-        <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.totalElectricitySaved)} />
-      </div>
+      {/*heading*/}
+      <ChartHeading tag={t.cumLabel} title={t.electricityCompare} subtitle={t.elecSub} badgeLabel={t.yearGap(result.years)} badgeValue={compactNtd(result.totalElectricitySaved)} />
       <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
@@ -479,13 +489,8 @@ function ElectricityChart({ result, t }) {
 function MaintenanceChart({ result, t }) {
   return (
     <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
-        <div className="min-w-0">
-          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.maintenanceCompare}</h3>
-          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.maintSub}</p>
-        </div>
-        <ChartBadge label={t.yearGap(result.years)} value={compactNtd(result.maintenanceSaved)} />
-      </div>
+      {/*heading*/}
+      <ChartHeading tag={t.cumLabel} title={t.maintenanceCompare} subtitle={t.maintSub} badgeLabel={t.yearGap(result.years)} badgeValue={compactNtd(result.maintenanceSaved)} />
       <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
@@ -506,13 +511,8 @@ function MaintenanceChart({ result, t }) {
 function CarbonMiniChart({ result, t }) {
   return (
     <div className="min-w-0 overflow-visible rounded-3xl border border-slate-300 bg-white p-4 shadow-md">
-      <div className="mb-2 grid min-h-[76px] grid-cols-[minmax(0,1fr)_112px] items-start gap-3">
-        <div className="min-w-0">
-          <h3 className="max-w-[12rem] text-base font-bold leading-7 text-blue-950">{t.carbonCompare}</h3>
-          <p className="mt-1 min-h-[32px] text-xs leading-4 text-slate-600">{t.carbonSub}</p>
-        </div>
-        <ChartBadge label={t.annualCarbon} value={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
-      </div>
+      {/*heading*/}
+      <ChartHeading tag={t.cumLabel} title={t.carbonCompare} subtitle={t.carbonSub} badgeLabel={t.annualCarbon} badgeValue={`${formatNumber(result.annualCarbonSaved / 1000, 1)} tCO₂e`} />
       <div className="h-44 w-full min-w-0 overflow-visible sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={result.yearlyRows} margin={{ top: 4, right: 8, bottom: 0, left: -4 }}>
