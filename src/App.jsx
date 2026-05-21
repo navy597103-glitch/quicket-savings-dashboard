@@ -150,7 +150,7 @@ const translations = {
     currentPlan: 'Current Plan', quicket: 'QUICKET', maintenanceCycle: 'Maintenance Cycle', carbonPrice: 'Carbon Price',
     overallAnalysis: 'Overall Benefit Analysis',
     cumLabel: 'CUM',
-    electricityCompare: 'Electricity Cost', maintenanceCompare: 'Maintenance Cost', carbonCompare: 'Carbon Savings',
+    electricityCompare: 'Electricity Cost', maintenanceCompare: 'Maintenance', carbonCompare: 'Carbon Savings',
     elecSub: 'Current vs QUICKET', maintSub: 'Full vs Module', carbonSub: 'Emission Gap',
     yearGap: (y) => `${y}-Year Gap`, annualCarbon: 'Annual Cut',
     insight: 'Project Insight',
