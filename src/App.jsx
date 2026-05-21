@@ -161,8 +161,7 @@ const translations = {
     insightLine1: (label,q,y)=> `${label}, ${q} fixtures in scope, evaluated over ${y} years.`,
     insightLine2: (kwh,ntd)=> `Estimated annual saving of ${kwh} kWh and ${ntd} in electricity cost.`,
     insightLine3: (y,ms,ts)=> `Estimated ${y}-year maintenance saving of ${ms}, with total benefit around ${ts}.`,
-    costComment:(repl,hours)=> `Equivalent to about ${repl} full luminaire replacements.
-About ${hours} electrician work-hours avoided.`,
+    timeCostComment:(minutes,hours)=> (<>Maintenance time shortened by {minutes} min per fixture<br />Equivalent to {hours} electrician work-hours saved</>),
     carbonCommentHeader:'Estimated using current reference prices:',
     carbonCommentEU:(v)=> `EU EUA: ${v}`,
     carbonCommentTW:(v)=> `Taiwan carbon fee: ${v}`,
